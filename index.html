@@ -613,7 +613,7 @@ const TR=[
  {id:'mag',name:'Magnet Trail',desc:'Pulls coins to you, +1 extra per coin',cost:250,ic:'\uD83E\uDDF2',mag:1},
  {id:'star',name:'Star Power',desc:'Fast + rainbow + magnet, all in one!',cost:800,ic:'\uD83C\uDF1F',spd:1.15,fancy:1,mag:1}
 ];
-const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],['kid','Kiddo','\uD83E\uDDD2'],['dino','Dino','\uD83E\uDD96'],['cat','Kitty','\uD83D\uDC31'],['pen','Pengu','\uD83D\uDC27']];
+const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],['kid','Kiddo','\uD83D\uDC66'],['girl','Missy','\uD83D\uDC67'],['dino','Dino','\uD83E\uDD96'],['cat','Kitty','\uD83D\uDC31'],['pen','Pengu','\uD83D\uDC27']];
 function tr(){for(const t of TR)if(t.id===G.eq)return t;return null;}
 /* Players: every name gets its own progress and records. Stored on this device only. */
 const PL={cur:null,list:[],legacy:null};
@@ -657,7 +657,7 @@ function leadDraw(){const L=$('leadL');L.innerHTML='';const p0=me();
   if(!rows.length){const e=document.createElement('p');e.textContent='No players yet. Press Play and add your name!';L.appendChild(e);}
   rows.forEach((p,i)=>{const d=document.createElement('div'),r=document.createElement('b'),m=document.createElement('div'),s1=document.createElement('strong'),s2=document.createElement('span');
     const mine=online?p.me:(rows===local?p.me:(p0&&p.name===p0.name&&p.chr===p0.chr));
-    d.className='it'+(mine?' me':p.mine?' mine':'');r.textContent=i<3?['🥇','🥈','🥉'][i]:String(i+1);s1.textContent=emo(p.chr)+' '+p.name;
+    d.className='it'+(mine?' me':p.mine?' mine':'');r.textContent=i<3?['🥇','🥈','🥉'][i]:String(i+1);s1.textContent=emo(mine&&p0?p0.chr:p.chr)+' '+p.name;
     s2.textContent='Best stage: '+(p.best||1)+' · Coins collected: '+(p.coins||0);m.appendChild(s1);m.appendChild(s2);d.appendChild(r);d.appendChild(m);L.appendChild(d);});}
 function showLead(from){G.lbFrom=from;const p0=me();if(p0){p0.best=Math.max(p0.best||1,G.best);p0.earned=Math.max(p0.earned||0,G.earned);p0.chr=G.chr;}
   show('lead');lbSync(()=>{if($('lead').classList.contains('on'))leadDraw();});leadDraw();}
@@ -891,6 +891,10 @@ function drawChar(FX){const P=G.P,t=G.t,a=P.face,rx=Math.cos(a),rz=Math.sin(a),f
     part(0,.34,0,.56*sxz,.5*sy,.5*sxz,B,em);two(.33,.4,0,.14,.3,.14,K);part(0,.8,0,.58,.56,.58,K);
     part(0,.92,-.06,.62,.42,.62,H);part(0,1.12,0,.14,.16,.14,H);
     two(.12,.82,.27,.075,.105,.075,DK);two(.2,.74,.24,.1,.07,.06,[1,.6,.65]);part(0,.7,.28,.14,.035,.04,[.75,.3,.3]);feet([.95,.3,.35],.24);}
+  else if(c==='girl'){B=tint||[1,.5,.72];const K=[1,.84,.7],H=[.58,.34,.16],BW=[1,.85,.25];
+    D(CONE,P.x,by+.27*sy,P.z,.86*sxz,.56*sy,.86*sxz,B,em);part(0,.42,0,.5*sxz,.4*sy,.46*sxz,B,em);two(.31,.42,0,.13,.28,.13,K);part(0,.82,0,.58,.56,.58,K);
+    part(0,.94,-.07,.64,.44,.62,H);two(.37,.74,-.04,.2,.34,.2,H);two(.37,.5,-.04,.15,.2,.15,H);two(.09,1.13,.06,.17,.12,.09,BW);part(0,1.12,.08,.08,.08,.08,[1,.55,.2]);
+    two(.12,.82,.27,.075,.105,.075,DK);two(.2,.74,.24,.1,.07,.06,[1,.55,.65]);part(0,.7,.28,.14,.035,.04,[.8,.3,.35]);feet([.6,.4,.9],.24);}
   else if(c==='dino'){B=tint||[.42,.78,.5];const O=[1,.6,.2];
     part(0,.42,0,.72*sxz,.78*sy,.74*sxz,B,em);part(0,.34,.18,.5,.5,.46,[.96,.93,.62]);part(0,.6,.36,.42,.3,.4,B,em);
     two(.15,.8,.26,.16,.18,.12,[1,1,1]);two(.15,.8,.32,.08,.1,.06,DK);
