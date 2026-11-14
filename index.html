@@ -74,6 +74,10 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 @keyframes kb{0%,30%,100%{transform:none;box-shadow:0 5px 0 #b9b4c9}15%{transform:translateY(4px);box-shadow:0 1px 0 #b9b4c9}}
 #stats{font-size:20px;font-weight:800;line-height:1.7;margin:6px 0}
 #stats b{color:#ffe66d}
+#hi{font-size:22px;font-weight:900;color:#ffe66d;margin:2px 0 0;min-height:0}
+#nmIn{pointer-events:auto;-webkit-user-select:text;user-select:text;font:inherit;font-weight:900;font-size:26px;text-align:center;color:#2b2a5a;background:#fff;border:4px solid #ffb938;border-radius:22px;padding:12px 16px;width:min(320px,86vw);margin:10px 0 4px;outline:none;text-shadow:none}
+.it.me{background:#fff3c4;box-shadow:0 0 0 3px #ffb938}
+#leadL p{font-size:16px}
 #coinp{pointer-events:auto;cursor:pointer}
 #coinp em{font-style:normal;font-size:11px;font-weight:900;background:#ffe66d;color:#4a2a00;border-radius:8px;padding:2px 6px;letter-spacing:.5px;text-shadow:none}
 #warn{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;box-shadow:inset 0 0 110px 34px rgba(200,70,190,.75)}
@@ -119,8 +123,10 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <div class="keys"><span>T</span><span>A</span><span>P</span><span>!</span><span>+1</span></div>
   <h1>Tippy Tap<br><em>Escape</em></h1>
   <p>Run, hop and dodge across the comfiest, clickiest, crunchiest worlds.</p>
+  <p id="hi"></p>
   <button class="btn" id="bPlay">Play</button>
   <button class="btn alt" id="bCont" style="display:none">Continue</button>
+  <div class="row" style="margin-top:4px"><button class="btn alt" id="bLead">Leaderboard</button><button class="btn alt" id="bWho">Add Player</button></div>
   <p style="font-size:14px;opacity:.85;margin-top:16px">Left circle: move &nbsp;·&nbsp; Right circle: jump<br>Tap your coins to open the Shop. Best with headphones!</p>
 </div>
 <div id="pause" class="ov sh">
@@ -128,12 +134,14 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <button class="btn" id="bRes">Keep Playing</button>
   <button class="btn alt" id="bSnd">Sound: On</button>
   <button class="btn alt" id="bRst">Back to Checkpoint</button>
+  <button class="btn alt" id="bLead2">Leaderboard</button>
   <button class="btn alt" id="bNew">Start Over (Stage 1)</button>
 </div>
 <div id="clear" class="ov sh">
   <h2 id="clrT">Stage Clear!</h2>
   <div id="stats"></div>
   <button class="btn" id="bNext">Next Stage</button>
+  <button class="btn alt" id="bLead3">Leaderboard</button>
 </div>
 
 <div id="pick" class="ov clr sh">
@@ -152,6 +160,23 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <p id="rdE" style="font-size:14px;margin:0"></p>
   <button class="btn" id="bGo">GO!</button>
   <div class="row"><button class="btn alt" id="bShop2">Shop</button><button class="btn alt" id="bBud">Change Buddy</button></div>
+</div>
+<div id="name" class="ov sh">
+  <h2>What's your name?</h2>
+  <input id="nmIn" type="text" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Your name" aria-label="Your name">
+  <button class="btn" id="bNmOk">OK</button>
+  <button class="btn alt" id="bNmX">Back</button>
+</div>
+<div id="who" class="ov sh">
+  <h2>Who's playing?</h2>
+  <div id="whoL" class="chips"></div>
+  <button class="btn" id="bWhoNew">New Player</button>
+  <button class="btn alt" id="bWhoX">Back</button>
+</div>
+<div id="lead" class="ov sh">
+  <h2>Leaderboard</h2>
+  <div id="leadL" class="list"></div>
+  <button class="btn alt" id="bLeadX">Back</button>
 </div>
 <div id="shop" class="ov sh">
   <h2>Shop</h2>
@@ -588,8 +613,36 @@ const TR=[
 ];
 const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],['kid','Kiddo','\uD83E\uDDD2'],['dino','Dino','\uD83E\uDD96'],['cat','Kitty','\uD83D\uDC31'],['pen','Pengu','\uD83D\uDC27']];
 function tr(){for(const t of TR)if(t.id===G.eq)return t;return null;}
-function save(st,cp){try{localStorage.setItem('tippytap_save',JSON.stringify({s:st||G.stage,c:cp===undefined?G.cp:cp,coins:G.coins,best:G.best,own:G.own,eq:G.eq,chr:G.chr}));}catch(e){}}
-function load(){try{const v=JSON.parse(localStorage.getItem('tippytap_save')||'null');if(v&&v.s>=1)return v;}catch(e){}return null;}
+/* Players: every name gets its own progress and records. Stored on this device only. */
+const PL={cur:null,list:[],legacy:null};
+function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players')||'null');if(v&&Array.isArray(v.list)){PL.list=v.list;PL.cur=v.cur;}}catch(e){}
+  if(!PL.list.length){try{const o=JSON.parse(localStorage.getItem('tippytap_save')||'null');if(o&&o.s>=1)PL.legacy=o;}catch(e){}}}
+function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
+function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
+function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);plSave();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;plSave();refreshStart();}
+function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
+  if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
+  PL.list.push(p);usePlayer(p.id);}
+function refreshStart(){const p=me(),s=load(),b=$('bCont');$('hi').textContent=p?'Hi, '+p.name+'!':'';
+  if(s){b.style.display='';b.textContent='Continue \u00B7 Stage '+s.s;$('bPlay').textContent='New Game';}else{b.style.display='none';$('bPlay').textContent='Play';}
+  $('bWho').textContent=p?'Switch Player':'Add Player';}
+let nameCb=null;
+function showName(cb){nameCb=cb||null;const i=$('nmIn');i.value='';show('name');try{i.focus();}catch(e){}}
+function nameOk(){const i=$('nmIn');let n=i.value.replace(/\s+/g,' ').trim().slice(0,12);if(!n)n='Player '+(PL.list.length+1);i.blur();addPlayer(n);const cb=nameCb;nameCb=null;if(cb)cb();else show('start');}
+function showWho(){const box=$('whoL');box.innerHTML='';
+  for(const p of PL.list){const b=document.createElement('button'),e=document.createElement('b');b.className='chip'+(p.id===PL.cur?' sel':'');e.textContent=emo(p.chr);b.appendChild(e);b.appendChild(document.createTextNode(p.name));
+    b.addEventListener('click',()=>{usePlayer(p.id);show('start');});box.appendChild(b);}
+  show('who');}
+function showLead(from){G.lbFrom=from;const p0=me();if(p0){p0.best=Math.max(p0.best||1,G.best);p0.earned=Math.max(p0.earned||0,G.earned);p0.chr=G.chr;}
+  const L=$('leadL');L.innerHTML='';const rows=PL.list.slice().sort((a,b)=>(b.best||1)-(a.best||1)||(b.earned||0)-(a.earned||0));
+  if(!rows.length){const e=document.createElement('p');e.textContent='No players yet. Press Play and add your name!';L.appendChild(e);}
+  rows.forEach((p,i)=>{const d=document.createElement('div'),r=document.createElement('b'),m=document.createElement('div'),s1=document.createElement('strong'),s2=document.createElement('span');
+    d.className='it'+(p.id===PL.cur?' me':'');r.textContent=i<3?['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'][i]:String(i+1);s1.textContent=emo(p.chr)+' '+p.name;
+    s2.textContent='Best stage: '+(p.best||1)+' \u00B7 Coins collected: '+(p.earned||0);m.appendChild(s1);m.appendChild(s2);d.appendChild(r);d.appendChild(m);L.appendChild(d);});
+  show('lead');}
+function load(){const p=me();return p&&p.s>=1?p:null;}
 function toast(s){const e=$('toast');e.textContent=s;e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 function card(a,b){$('cardS').textContent=a;$('cardT').textContent=b;const e=$('card');e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 function hud(){ $('coinn').textContent=G.coins; }
@@ -931,13 +984,13 @@ const jIds=new Set();
 zr.addEventListener('pointerdown',e=>{e.preventDefault();jIds.add(e.pointerId);try{zr.setPointerCapture(e.pointerId);}catch(_){}inp.jump=true;inp.jt=G.t;$('jump').classList.add('on');});
 function jEnd(e){jIds.delete(e.pointerId);if(!jIds.size){inp.jump=false;$('jump').classList.remove('on');}}
 zr.addEventListener('pointerup',jEnd);zr.addEventListener('pointercancel',jEnd);
-window.addEventListener('keydown',e=>{if(!inp.k[e.code]&&e.code==='Space')inp.jt=G.t;inp.k[e.code]=true;if(e.code==='Escape')pause();if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.code)>=0)e.preventDefault();});
+window.addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(!inp.k[e.code]&&e.code==='Space')inp.jt=G.t;inp.k[e.code]=true;if(e.code==='Escape')pause();if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.code)>=0)e.preventDefault();});
 window.addEventListener('keyup',e=>{inp.k[e.code]=false;});
 window.addEventListener('blur',()=>{inp.k={};});
 document.addEventListener('touchmove',e=>{if(!(e.target.closest&&e.target.closest('.list')))e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
-let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list')))e.preventDefault();lastTouch=n;},{passive:false});
+let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list,input')))e.preventDefault();lastTouch=n;},{passive:false});
 
 /* ====================== Menus ====================== */
 function pause(){if(G.state!=='play')return;G.state='pause';$('pause').classList.add('on');if(A.ctx)A.ctx.suspend();}
@@ -946,15 +999,20 @@ $('pbtn').addEventListener('click',pause);$('bRes').addEventListener('click',res
 $('bSnd').addEventListener('click',()=>{A.on=!A.on;if(A.master)A.master.gain.value=A.on?1:0;$('bSnd').textContent='Sound: '+(A.on?'On':'Off');});
 $('bRst').addEventListener('click',()=>{resume();placeAt(G.W.cps[G.cp]);chReset();});
 $('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;prepStage(1,0);showReady();});
-$('bPlay').addEventListener('click',()=>{initAudio();G.coins=0;prepStage(1,0);showPick();});
+$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
 $('bCont').addEventListener('click',()=>{initAudio();const s=load();if(s){G.coins=s.coins||0;G.best=s.best||s.s;prepStage(s.s,s.c);}else prepStage(1,0);showPick();});
 $('bNext').addEventListener('click',()=>{initAudio();prepStage(G.stage+1,0);showReady();});
 $('bPkOk').addEventListener('click',showReady);$('bBud').addEventListener('click',showPick);
 $('bGo').addEventListener('click',()=>{initAudio();go();});
 $('coinp').addEventListener('click',openShop);$('bShop2').addEventListener('click',openShop);$('bShopX').addEventListener('click',closeShop);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-(()=>{const s=load();if(s){G.own=Array.isArray(s.own)?s.own:[];G.eq=s.eq||null;G.chr=s.chr||'bunny';}
-  if(s&&(s.s>1||s.c>0||s.coins>0)){const b=$('bCont');b.style.display='';b.textContent='Continue · Stage '+s.s;$('bPlay').textContent='New Game';}})();
+$('bNmOk').addEventListener('click',nameOk);$('nmIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameOk();}});
+$('bNmX').addEventListener('click',()=>{$('nmIn').blur();nameCb=null;show('start');});
+$('bWho').addEventListener('click',()=>{if(PL.list.length)showWho();else showName(null);});
+$('bWhoNew').addEventListener('click',()=>showName(null));$('bWhoX').addEventListener('click',()=>show('start'));
+$('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventListener('click',()=>showLead('pause'));$('bLead3').addEventListener('click',()=>showLead('clear'));
+$('bLeadX').addEventListener('click',()=>show(G.lbFrom||'start'));
+plLoad();if(me())usePlayer(PL.cur);else refreshStart();
 
 /* ====================== Main loop ====================== */
 resize();
