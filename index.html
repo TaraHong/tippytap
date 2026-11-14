@@ -77,6 +77,8 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 #hi{font-size:22px;font-weight:900;color:#ffe66d;margin:2px 0 0;min-height:0}
 #nmIn{pointer-events:auto;-webkit-user-select:text;user-select:text;font:inherit;font-weight:900;font-size:26px;text-align:center;color:#2b2a5a;background:#fff;border:4px solid #ffb938;border-radius:22px;padding:12px 16px;width:min(320px,86vw);margin:10px 0 4px;outline:none;text-shadow:none}
 .it.me{background:#fff3c4;box-shadow:0 0 0 3px #ffb938}
+.it.mine{background:#fffbe6}
+#leadS{font-size:13px;margin:0 0 2px;opacity:.92}
 #leadL p{font-size:16px}
 #coinp{pointer-events:auto;cursor:pointer}
 #coinp em{font-style:normal;font-size:11px;font-weight:900;background:#ffe66d;color:#4a2a00;border-radius:8px;padding:2px 6px;letter-spacing:.5px;text-shadow:none}
@@ -620,7 +622,7 @@ function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players'
 function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
-function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);plSave();}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);plSave();lbSoon();}
 function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
@@ -635,13 +637,30 @@ function showWho(){const box=$('whoL');box.innerHTML='';
   for(const p of PL.list){const b=document.createElement('button'),e=document.createElement('b');b.className='chip'+(p.id===PL.cur?' sel':'');e.textContent=emo(p.chr);b.appendChild(e);b.appendChild(document.createTextNode(p.name));
     b.addEventListener('click',()=>{usePlayer(p.id);show('start');});box.appendChild(b);}
   show('who');}
-function showLead(from){G.lbFrom=from;const p0=me();if(p0){p0.best=Math.max(p0.best||1,G.best);p0.earned=Math.max(p0.earned||0,G.earned);p0.chr=G.chr;}
-  const L=$('leadL');L.innerHTML='';const rows=PL.list.slice().sort((a,b)=>(b.best||1)-(a.best||1)||(b.earned||0)-(a.earned||0));
+/* Online leaderboard: a Google Sheet (through its Apps Script web app) keeps one row per player.
+   Everything still works without internet; records are sent the next time the game is online. */
+const LB_URL=window.__TT_LB||'https://script.google.com/macros/s/AKfycbz16w6iDwYNwVOMsCaD92ITyGThiNW3QYPrvxRFfNnsC8H0PigJHtSty_XPaNIvdomgrg/exec';
+const NET={top:null,busy:false,err:false,timer:0,cached:null};
+try{const c=JSON.parse(localStorage.getItem('tippytap_lb')||'null');if(Array.isArray(c))NET.cached=c;}catch(e){}
+function lbSync(cb){if(!LB_URL||NET.busy||!window.fetch){if(cb)cb();return;}
+  const list=PL.list.slice(0,20).map(p=>({id:p.id,name:p.name,chr:p.chr,best:p.best||1,earned:p.earned||0}));
+  let ctl=null,to=0;try{ctl=new AbortController();to=setTimeout(()=>ctl.abort(),12000);}catch(e){}
+  NET.busy=true;const done=ok=>{NET.busy=false;NET.err=!ok;clearTimeout(to);if(cb)cb();};
+  fetch(LB_URL+'?cur='+encodeURIComponent(PL.cur||'')+'&d='+encodeURIComponent(JSON.stringify(list)),{method:'GET',redirect:'follow',credentials:'omit',cache:'no-store',signal:ctl?ctl.signal:undefined})
+    .then(r=>r.json()).then(j=>{if(j&&j.ok&&Array.isArray(j.top)){NET.top=NET.cached=j.top;try{localStorage.setItem('tippytap_lb',JSON.stringify(j.top));}catch(e){}done(true);}else done(false);})
+    .catch(()=>done(false));}
+function lbSoon(){clearTimeout(NET.timer);NET.timer=setTimeout(()=>lbSync(),4000);}
+function leadDraw(){const L=$('leadL');L.innerHTML='';const p0=me();
+  const local=PL.list.map(p=>({name:p.name,chr:p.chr,best:p.best||1,coins:p.earned||0,me:p.id===PL.cur})).sort((a,b)=>b.best-a.best||b.coins-a.coins);
+  const online=NET.top&&!NET.err,rows=online?NET.top:(NET.cached||local),st=document.createElement('p');st.id='leadS';
+  st.textContent=NET.busy?'Connecting…':online?'Online · everyone’s records':NET.cached?'Offline · showing the last online list':'Offline · players on this device';L.appendChild(st);
   if(!rows.length){const e=document.createElement('p');e.textContent='No players yet. Press Play and add your name!';L.appendChild(e);}
   rows.forEach((p,i)=>{const d=document.createElement('div'),r=document.createElement('b'),m=document.createElement('div'),s1=document.createElement('strong'),s2=document.createElement('span');
-    d.className='it'+(p.id===PL.cur?' me':'');r.textContent=i<3?['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'][i]:String(i+1);s1.textContent=emo(p.chr)+' '+p.name;
-    s2.textContent='Best stage: '+(p.best||1)+' \u00B7 Coins collected: '+(p.earned||0);m.appendChild(s1);m.appendChild(s2);d.appendChild(r);d.appendChild(m);L.appendChild(d);});
-  show('lead');}
+    const mine=online?p.me:(rows===local?p.me:(p0&&p.name===p0.name&&p.chr===p0.chr));
+    d.className='it'+(mine?' me':p.mine?' mine':'');r.textContent=i<3?['🥇','🥈','🥉'][i]:String(i+1);s1.textContent=emo(p.chr)+' '+p.name;
+    s2.textContent='Best stage: '+(p.best||1)+' · Coins collected: '+(p.coins||0);m.appendChild(s1);m.appendChild(s2);d.appendChild(r);d.appendChild(m);L.appendChild(d);});}
+function showLead(from){G.lbFrom=from;const p0=me();if(p0){p0.best=Math.max(p0.best||1,G.best);p0.earned=Math.max(p0.earned||0,G.earned);p0.chr=G.chr;}
+  show('lead');lbSync(()=>{if($('lead').classList.contains('on'))leadDraw();});leadDraw();}
 function load(){const p=me();return p&&p.s>=1?p:null;}
 function toast(s){const e=$('toast');e.textContent=s;e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 function card(a,b){$('cardS').textContent=a;$('cardT').textContent=b;const e=$('card');e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
@@ -1013,6 +1032,7 @@ $('bWhoNew').addEventListener('click',()=>showName(null));$('bWhoX').addEventLis
 $('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventListener('click',()=>showLead('pause'));$('bLead3').addEventListener('click',()=>showLead('clear'));
 $('bLeadX').addEventListener('click',()=>show(G.lbFrom||'start'));
 plLoad();if(me())usePlayer(PL.cur);else refreshStart();
+if(PL.list.length)setTimeout(()=>lbSync(),1500);
 
 /* ====================== Main loop ====================== */
 resize();
