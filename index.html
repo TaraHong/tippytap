@@ -85,6 +85,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 #spd.on{opacity:1}
 #spd b{display:block;font-size:64px;line-height:1;font-weight:900;color:#ffe66d}
 #spd small{font-size:16px;font-weight:900;letter-spacing:4px}
+#revb{margin-top:4px;font-size:14px;font-weight:800;color:#ffc4dd}
 #armb{margin-top:4px;font-size:14px;font-weight:800;color:#bfeaff}
 #coinp{pointer-events:auto;cursor:pointer}
 #coinp em{font-style:normal;font-size:11px;font-weight:900;background:#ffe66d;color:#4a2a00;border-radius:8px;padding:2px 6px;letter-spacing:.5px;text-shadow:none}
@@ -117,7 +118,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 <div id="warn"></div>
 <div id="fl"></div>
 <div id="hud" class="sh">
-  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div><div id="bst"></div></div>
+  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div><div id="revb"></div><div id="bst"></div></div>
   <div id="coinp"><i></i><span id="coinn">0</span><em>SHOP</em></div>
   <button id="pbtn" aria-label="Pause"><b></b><b></b></button>
 </div>
@@ -168,6 +169,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <div id="rdTr" class="chips"></div>
   <p id="rdE" style="font-size:14px;margin:0"></p>
   <p id="rdA" style="font-size:14px;margin:0;color:#bfeaff"></p>
+  <p id="rdR" style="font-size:14px;margin:0;color:#ffc4dd"></p>
   <button class="btn" id="bGo">GO!</button>
   <div class="row"><button class="btn alt" id="bShop2">Shop</button><button class="btn alt" id="bBud">Change Buddy</button></div>
 </div>
@@ -616,7 +618,7 @@ function build(stage){
 }
 
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,armS:0,armOk:false,boost:0,boostT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,armS:0,armOk:false,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
   P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
@@ -637,8 +639,8 @@ function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players'
 function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
-function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=G.armS;p.armOk=G.armOk;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=p.arm||0;G.armS=p.armS||0;G.armOk=!!p.armOk;armHud();plSave();refreshStart();}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=G.armS;p.armOk=G.armOk;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=p.arm||0;G.armS=p.armS||0;G.armOk=!!p.armOk;armHud();G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -696,7 +698,7 @@ function addCoins(n,x,y,z,label,cls){const b=G.earned;G.coins+=n;G.earned+=n;G.s
   else p.classList.add('pop');
   if(label)floater(label,x,y,z,cls);}
 function applyTheme(th){const r=document.documentElement.style;r.setProperty('--s1',th.sky[0]);r.setProperty('--s2',th.sky[1]);r.setProperty('--s3',th.sky[2]);paintBG(th);}
-function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
+function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;G.revH.length=0;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
   G.cam.x=P.x;G.cam.y=P.y;G.cam.z=P.z;}
 function show(id){document.querySelectorAll('.ov').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');}
 function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);const W=G.W=build(n);cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
@@ -716,6 +718,7 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
     b.addEventListener('click',()=>{G.eq=G.eq===t.id?null:t.id;SFX.keyUp();save();showReady();});box.appendChild(b);}
   const e=tr();$('rdE').textContent=e?('Equipped: '+e.name+' · '+e.desc):(G.own.length?'Tap a trail to equip it. Tap again to take it off.':'');
   {const n=G.arm+(G.armOk&&G.armS===G.stage?1:0);$('rdA').textContent=n?SHIELD+' Armor ready for '+n+' stage'+(n>1?'s':''):'';}
+  {const n=G.rev+(G.revOn&&G.revS===G.stage?1:0);$('rdR').textContent=n?HEART+' Instant Revive ready for '+n+' stage'+(n>1?'s':''):'';}
   show('ready');}
 function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
   for(const c of CHARS){const b=document.createElement('button');b.className='chip'+(G.chr===c[0]?' sel':'');b.innerHTML='<b>'+c[2]+'</b>'+c[1];
@@ -723,6 +726,7 @@ function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
   show('pick');}
 function go(){show(null);card('STAGE '+G.stage,G.W.th.name);G.state='play';chReset();
   if(G.arm>0&&G.armS!==G.stage){G.arm--;G.armS=G.stage;G.armOk=true;save();}armHud();
+  if(G.rev>0&&G.revS!==G.stage){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;save();}revHud();
   if(G.stage>=4)setTimeout(()=>{if(G.state==='play')toast('Run! Grumbles is coming!');},2700);}
 function chReset(){const c=G.ch,P=G.P;c.on=G.stage>=4;c.act=false;c.delay=3.2;c.path.length=0;c.path.push([P.x,P.y,P.z]);c.i=0;c.x=P.x;c.y=P.y;c.z=P.z;c.near=0;c.sc=0;c.face=0;c.thT=0;$('warn').style.opacity=0;}
 function updChaser(dt){const c=G.ch,P=G.P;if(!c.on||G.state!=='play')return;
@@ -751,6 +755,9 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
   {const n=G.arm+(G.armOk?1:0),can=G.coins>=ARM_COST;
     row(SHIELD,'Armor','Blocks one hit in each of your next 3 stages. Falling still counts!'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?ARM_COST+' coins':'Need '+(ARM_COST-G.coins)+' more',can?'':'no',()=>{
       if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;SFX.buy();hud();armHud();save();drawShop();});}
+  {const n=G.rev+(G.revOn?1:0),can=G.coins>=REV_COST;
+    row(HEART,'Instant Revive','For your next 2 stages: twice per stage, pop right back where you were instead of the checkpoint.'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?REV_COST+' coins':'Need '+(REV_COST-G.coins)+' more',can?'':'no',()=>{
+      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;SFX.buy();hud();revHud();save();drawShop();});}
   for(const t of TR){const own=G.own.indexOf(t.id)>=0,can=G.coins>=t.cost;
     row(t.ic,t.name,t.desc,own?(G.eq===t.id?'Take off':'Equip'):(can?t.cost+' coins':'Need '+(t.cost-G.coins)+' more'),own?(G.eq===t.id?'on':'eq'):(can?'':'no'),()=>{
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
@@ -779,19 +786,33 @@ function drawTread(k,top,t){const g=k.gold?1:0,F=TRF[g],x=k.x,z=k.z,w=k.hx*2,l=k
   D(CUBE,x-k.hx-.03,top+.75,fz,.12,1.5,.12,F,e);D(CUBE,x+k.hx+.03,top+.75,fz,.12,1.5,.12,F,e);D(CUBE,x,top+1.46,fz,w+.2,.14,.14,F,e);
   D(CUBE,x-k.hx-.03,top+1.02,fz+.5,.1,.1,1,F,e);D(CUBE,x+k.hx+.03,top+1.02,fz+.5,.1,.1,1,F,e);
   D(CUBE,x,top+1.2,fz-.04,w*.72,.44,.08,TRD[g],.7+.3*Math.sin(t*6),1,0,-.35);}
+/* Instant Revive: bought for 2 stages. In each of those stages it works twice: dying puts the buddy straight back
+   where it just was (the last safe footing) instead of the checkpoint. Two hearts over the buddy show what is left. */
+const REV_USES=2,HRT=[1,.35,.6],HRG=[.42,.42,.5];
+function drawHearts(t){const P=G.P;for(let i=0;i<REV_USES;i++){const on=i<G.revLeft,c=on?HRT:HRG,s=on?1.4:1,e=on?.55:0,x=P.x+(i-(REV_USES-1)/2)*.7,y=P.y+1.95+(on?Math.sin(t*3+i)*.05:0),z=P.z;
+  D(SPH,x-.075*s,y+.05*s,z,.19*s,.19*s,.14*s,c,e);D(SPH,x+.075*s,y+.05*s,z,.19*s,.19*s,.14*s,c,e);D(CONE,x,y-.1*s,z,.3*s,.26*s,.14*s,c,e,1,0,Math.PI);}}
+const REV_COST=1500,HEART='\uD83D\uDC96';
+function revHud(){$('revb').textContent=G.revOn?HEART+' Revive '+G.revLeft+'/'+REV_USES+(G.rev?' \u00B7 '+G.rev+' more stage'+(G.rev>1?'s':''):''):(G.rev?HEART+' Revive: '+G.rev+' stage'+(G.rev>1?'s':'')+' left':'');}
+function revTrack(dt){const P=G.P;if(G.state!=='play'||!P.gr||!P.ground)return;G.revT-=dt;if(G.revT>0)return;G.revT=.2;const t=P.ground;if(t.kind==='crumble'||t.kind==='bounce')return;
+  G.revH.push({t,ox:P.x-t.x,oz:P.z-t.z});if(G.revH.length>8)G.revH.shift();}
+function revPlace(kind){const H=G.revH,P=G.P;   // after a fall, go back about half a second so the buddy is not put on the very edge it fell from
+  for(let i=Math.max(0,H.length-1-(kind==='fall'?2:0));i>=0;i--){const h=H[i],t=h.t;if(!t||t.cr===2)continue;
+    P.x=t.x+clamp(h.ox,-(t.hx-.3),t.hx-.3);P.z=t.z+clamp(h.oz,-(t.hz-.3),t.hz-.3);P.y=tt(t)+.05;P.vx=P.vy=P.vz=P.bz=0;P.gr=false;P.ground=null;P.lastGY=tt(t);P.inv=1.8;
+    G.revLeft--;revHud();SFX.check();burst(P.x,P.y+.6,P.z,22,[[1,.6,.8],[1,1,1],[1,.85,.4]],5,{emis:.7});spawn(P.x,P.y+.2,P.z,0,0,0,.6,.7,[1,.6,.8],{ring:true,g:0,emis:1});floater(G.revLeft?'Revived! '+G.revLeft+' left':'Revived! Last one',P.x,P.y+2.3,P.z,'d');save();return true;}
+  return false;}
 /* Armor: bought for 3 stages. In each of those stages it soaks up one hit (not a fall), then it is broken until the next stage. */
 const ARM_COST=1000,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
 function armHud(){$('armb').textContent=G.armOk?SHIELD+' Armor on'+(G.arm?' \u00B7 '+G.arm+' more stage'+(G.arm>1?'s':''):''):(G.arm?SHIELD+' Armor: '+G.arm+' stage'+(G.arm>1?'s':'')+' left':'');}
 function armBreak(kind){const P=G.P;G.armOk=false;P.inv=1.6;armHud();save();SFX.armor();burst(P.x,P.y+.6,P.z,26,[[.6,.9,1],[1,1,1],[.4,.7,1]],6,{emis:.6});
   spawn(P.x,P.y+.5,P.z,0,0,0,.5,.8,ARMC,{ring:true,g:0,emis:1});floater('Armor broke!',P.x,P.y+1.8,P.z,'d');if(kind==='caught')chReset();}
-function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.armOk){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=.85;P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
+function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.armOk){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=G.revOn&&G.revLeft>0?.45:.85;G.deadKind=kind;P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
   for(const z of G.W.zones)if(z.in&&!z.done)z.hit=true;
   $('warn').style.opacity=0;
   if(kind==='bonk'){SFX.bonk();burst(P.x,P.y+.5,P.z,22,[[1,.85,.5],[1,1,1],[1,.6,.6]],5,{sph:true});}
   else if(kind==='caught'){SFX.chomp();burst(P.x,P.y+.5,P.z,26,[[.5,.4,.7],[.75,.65,.9],[1,1,1]],5,{sph:true});}else SFX.fall();
   floater(kind==='caught'?'Grumbles got you!':['Oopsie!','So close!','Nice try!','Almost!','Try again!'][(Math.random()*5)|0],P.x,Math.max(P.y,P.lastGY)+1.5,P.z,'');}
 function strk(){const e=$('strk');if(G.streak>=2){e.textContent='Dodge streak x'+G.streak;e.style.opacity=1;}else e.style.opacity=0;}
-function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').classList.remove('on');G.armS=0;G.armOk=false;armHud();
+function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').classList.remove('on');G.armS=0;G.armOk=false;armHud();G.revS=0;G.revOn=false;G.revLeft=0;revHud();
   if(ch.on&&ch.act){burst(ch.x,ch.y+.6,ch.z,26,[[.5,.4,.7],[.8,.7,.95]],5,{sph:true});floater('Bye bye, Grumbles!',ch.x,ch.y+2,ch.z,'');}ch.on=false;$('warn').style.opacity=0;
   for(let i=0;i<4;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),30,CONF,7,{emis:.4}),i*220);
   const bonus=10+5*G.stage,clean=G.bonks===0?20:0;const got=G.stageCoins;
@@ -841,7 +862,7 @@ function update(dt){
     if(t.cr===1){t.crT-=dt;if(t.crT<=0){t.cr=2;t.fv=0;t.crT=2.8;}}
     else if(t.cr===2){t.fv-=30*dt;t.fall+=t.fv*dt;t.crT-=dt;if(t.crT<=0){t.cr=0;t.fall=0;}}
   }
-  if(G.state==='dead'){G.deadT-=dt;if(G.deadT<=0){placeAt(W.cps[G.cp]);G.state='play';chReset();}}
+  if(G.state==='dead'){G.deadT-=dt;if(G.deadT<=0){if(!(G.revOn&&G.revLeft>0&&revPlace(G.deadKind)))placeAt(W.cps[G.cp]);G.state='play';chReset();}}
   else{
     const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(G.boostT>0?1+G.boost:1),mg=FX&&FX.mag;
     let ix=inp.x,iz=inp.y;const k=inp.k;
@@ -871,7 +892,7 @@ function update(dt){
       if(best!==g0||!wasGr){if(g0&&g0!==best&&th.id==='keys'&&wasGr)SFX.keyUp();onTile(best,!wasGr?clamp(-vy0/13,.55,1.2):(best.pressed?.5:.85),!wasGr);P.stepD=0;}
       else{const sp=Math.hypot(P.vx,P.vz);P.stepD+=sp*dt;P.walk+=sp*dt*4.2;if(P.stepD>1.2){P.stepD=0;stepSnd(best,.42,false);}}
     }else{P.gr=false;P.ground=null;}
-    trStep(dt,ctl);
+    trStep(dt,ctl);revTrack(dt);
     // squash spring
     P.sqv+=(-P.sq*160-P.sqv*14)*dt;P.sq=clamp(P.sq+P.sqv*dt,-.4,.4);
     if(P.inv>0)P.inv-=dt;
@@ -1020,6 +1041,7 @@ function render(){
     cp(-.12,.5,.64,.09,.1,.06,[1,1,1]);cp(.12,.5,.64,.09,.1,.06,[1,1,1]);}
   // player
   if(G.state!=='dead'&&!(P.inv>0&&((t*14)|0)%2))drawChar(FX);
+  if(G.revOn&&G.state!=='dead')drawHearts(t);
   // ---- transparent pass
   gl.depthMask(false);
   if(th.id==='bubble')for(const d of W.decor){if(d.z<zmin||d.z>zmax+6)continue;const s=d.s*1.3,y=d.y+3+Math.sin(t*.5+d.ph)*.8;D(SPH,d.x,y,d.z,s*2,s*2,s*2,DC.bub,.35,.26);D(SPH,d.x-s*.45,y+s*.5,d.z+s*.6,s*.45,s*.28,s*.3,DC.white,1,.55);}
@@ -1073,8 +1095,8 @@ function resume(){if(G.state!=='pause')return;G.state='play';$('pause').classLis
 $('pbtn').addEventListener('click',pause);$('bRes').addEventListener('click',resume);
 $('bSnd').addEventListener('click',()=>{A.on=!A.on;if(A.master)A.master.gain.value=A.on?1:0;$('bSnd').textContent='Sound: '+(A.on?'On':'Off');});
 $('bRst').addEventListener('click',()=>{resume();placeAt(G.W.cps[G.cp]);chReset();});
-$('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.armS=0;G.armOk=false;prepStage(1,0);showReady();});
-$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.armS=0;G.armOk=false;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
+$('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.armS=0;G.armOk=false;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showReady();});
+$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.armS=0;G.armOk=false;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
 $('bCont').addEventListener('click',()=>{initAudio();const s=load();if(s){G.coins=s.coins||0;G.best=s.best||s.s;prepStage(s.s,s.c);}else prepStage(1,0);showPick();});
 $('bNext').addEventListener('click',()=>{initAudio();prepStage(G.stage+1,0);showReady();});
 $('bPkOk').addEventListener('click',showReady);$('bBud').addEventListener('click',showPick);
