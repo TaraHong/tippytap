@@ -80,6 +80,11 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 .it.mine{background:#fffbe6}
 #leadS{font-size:13px;margin:0 0 2px;opacity:.92}
 #leadL p{font-size:16px}
+#bst{margin-top:4px;font-size:15px;font-weight:900;color:#ffe66d}
+#spd{position:fixed;left:0;right:0;top:calc(150px + var(--sat));text-align:center;z-index:4;pointer-events:none;opacity:0;transition:opacity .2s}
+#spd.on{opacity:1}
+#spd b{display:block;font-size:64px;line-height:1;font-weight:900;color:#ffe66d}
+#spd small{font-size:16px;font-weight:900;letter-spacing:4px}
 #armb{margin-top:4px;font-size:14px;font-weight:800;color:#bfeaff}
 #coinp{pointer-events:auto;cursor:pointer}
 #coinp em{font-style:normal;font-size:11px;font-weight:900;background:#ffe66d;color:#4a2a00;border-radius:8px;padding:2px 6px;letter-spacing:.5px;text-shadow:none}
@@ -112,11 +117,12 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 <div id="warn"></div>
 <div id="fl"></div>
 <div id="hud" class="sh">
-  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div></div>
+  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div><div id="bst"></div></div>
   <div id="coinp"><i></i><span id="coinn">0</span><em>SHOP</em></div>
   <button id="pbtn" aria-label="Pause"><b></b><b></b></button>
 </div>
 <div id="toast" class="sh"></div>
+<div id="spd" class="sh"><b id="spdN">0</b><small>SPEED</small></div>
 <div id="card" class="sh"><small id="cardS"></small><span id="cardT"></span></div>
 <div id="zl"></div><div id="zr"></div>
 <div id="joy"><div id="knob"></div></div>
@@ -362,6 +368,7 @@ const SFX={
  grum(){Tn({type:'sawtooth',f:150,f2:90,d:.5,g:.08,a:.05});Tn({f:110,f2:70,d:.6,g:.2,a:.05});},
  buy(){[0,4,7,12].forEach((k,i)=>Tn({t:i*.06,type:'triangle',f:523.25*Math.pow(2,k/12),d:.3,g:.18,rev:.3}));},
  armor(){N({type:'highpass',f:3000,d:.28,g:.35});Tn({f:980,f2:420,d:.25,g:.18});for(let i=0;i<4;i++)Tn({t:.03+i*.04,f:rand(2200,4200),d:.12,g:.05});},
+ tread(gold,n){N({f:gold?1500:1000,q:2,d:.025,g:.11});if(n%20===0)Tn({f:420+n*1.5,d:.07,g:.06});},
  crack(){for(let i=0;i<5;i++)N({t:i*.03+rand(0,.02),f:rand(350,900),q:2,d:rand(.02,.05),g:rand(.15,.3)});},
  keyUp(){N({f:1900*rand(.9,1.1),q:3,d:.02,g:.1});}
 };
@@ -572,7 +579,7 @@ function build(stage){
     cz-=.4;grid(3,1);},
    bounce(){grid(3,1);const z0=cz,w=2*U-GAP;T(cx,cy,cz-U,w,w,'bounce');cz-=2*U;
     for(let k=0;k<4;k++)coin(cx,cy+1.6+k,z0-U-k*.55);cz-=1.2;cy+=3;grid(3,4);},
-   zoom(){grid(3,1);const n=6+((R()*4)|0),z0=cz;grid(3,n,'boost');for(let i=0;i<n;i+=2)coin(cx+((i>>1)%3-1)*U,cy+.9,z0-(i+.5)*U);grid(3,5);},
+   zoom(){grid(3,1);const n=6+((R()*4)|0),z0=cz;grid(3,n,'boost');for(let i=0;i<n;i+=2)coin(cx+((i>>1)%3-1)*U,cy+.9,z0-(i+.5)*U);grid(3,5);(W.trSpots=W.trSpots||[]).push({x:cx,y:cy,z:cz+1.5*U,hx:1.5*U-GAP/2});},
    drop(){cz-=1.4;cy-=2.5;coin(cx,cy+2.2,cz+.3);grid(3,2);},
    beam(){const n=3+((d*3)|0);let dir=R()<.5?1:-1;
     for(let i=0;i<n;i++){const z0=cz;grid(1,3);coin(cx,cy+.9,z0-1.5*U);
@@ -597,6 +604,11 @@ function build(stage){
     SEG[s]();
   }
   cz-=.9;const w=3*U-GAP;W.finish=T(cx,cy,cz-1.5*U,w,w,'finish');cz-=3*U;W.endZ=W.finish.z;W.total=-W.endZ;
+  /* one treadmill beside every checkpoint after the start pad and beside the landing after every zoom lane.
+     Along the course they take turns: black, gold, black ... Black is a short hop to the right, gold a longer jump to the left. */
+  const cpS=W.cps.slice(1).map(c=>({x:c.x,y:c.y,z:c.z,hx:c.hx}));   // a zoom-lane spot that sits right next to a checkpoint is dropped, so two treadmills never stand together
+  (W.trSpots||[]).filter(q=>cpS.every(c=>Math.abs(c.z-q.z)>16)).concat(cpS).sort((a,b)=>b.z-a.z).forEach((c,i)=>{const g=i%2;W.tiles.push({x:g?c.x-(c.hx+2+.8):c.x+(c.hx+1.2+.8),y:c.y,z:c.z,hx:.8,hz:1.5,th:.5,kind:'tread',gold:!!g,
+      off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:true,flash:0,col:[.17,.17,.21],pcol:[.17,.17,.21],glyph:-1,deco:0,note:0,dx:0,dz:0,mv:null,cp:-1,seed:0,ft:1});});
   const nd=Math.round((W.total+38)/13);
   for(let k=0;k<nd;k++){const side=R()<.5?-1:1,z=8-R()*(W.total+30);let by=0,bd=1e9;for(const t of W.tiles){const dz=Math.abs(t.z-z);if(dz<bd){bd=dz;by=t.y;}}
     W.decor.push({x:side*(8.5+R()*15),y:by-1-R()*7,z,s:1+R()*1.5,k:(R()*2)|0,col:th.decor[(R()*3)|0],c2:th.decor[(R()*3)|0],ph:R()*6,gl:(R()*36)|0});}
@@ -604,9 +616,9 @@ function build(stage){
 }
 
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,armS:0,armOk:false,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,armS:0,armOk:false,boost:0,boostT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
-  P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
+  P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
 const inp={x:0,y:0,jump:false,jt:-9,k:{}};
 const TR=[
@@ -684,7 +696,7 @@ function addCoins(n,x,y,z,label,cls){const b=G.earned;G.coins+=n;G.earned+=n;G.s
   else p.classList.add('pop');
   if(label)floater(label,x,y,z,cls);}
 function applyTheme(th){const r=document.documentElement.style;r.setProperty('--s1',th.sky[0]);r.setProperty('--s2',th.sky[1]);r.setProperty('--s3',th.sky[2]);paintBG(th);}
-function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;P.vx=P.vy=P.vz=P.bz=0;P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
+function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
   G.cam.x=P.x;G.cam.y=P.y;G.cam.z=P.z;}
 function show(id){document.querySelectorAll('.ov').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');}
 function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);const W=G.W=build(n);cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
@@ -744,19 +756,42 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
       save();drawShop();});}}
+/* Treadmills: stand on one and the buddy runs in place. Every step banks +2 speed.
+   Gold takes 20 steps a second and black 10, so ten seconds is 400 (gold) or 200 (black).
+   Stepping off turns the bank into a 10-second boost: 100 speed = 10% faster. */
+const TR_RATE=[10,20],TR_GAIN=2,TR_MAX=600,TR_TIME=10;
+function trHud(){const e=$('bst');e.textContent=G.boostT>0?'\u26A1'+' +'+Math.round(G.boost*100)+'% \u00B7 '+Math.ceil(G.boostT)+'s':'';}
+function trStart(){const P=G.P;if(P.bank<1)return;G.boost=P.bank/1000;G.boostT=TR_TIME;P.bank=0;P.stepF=0;$('spd').classList.remove('on');toast('Speed +'+Math.round(G.boost*100)+'% for '+TR_TIME+' seconds!');SFX.zoom();SFX.dodge(3);
+  burst(P.x,P.y+.6,P.z,20,[[1,.9,.4],[1,1,1],[.5,.9,1]],5,{emis:.7});trHud();}
+function trStep(dt,ctl){const P=G.P,k=P.gr&&P.ground&&P.ground.kind==='tread'?P.ground:null;
+  if(k&&ctl){P.onTr=true;P.offT=0;const r=TR_RATE[k.gold?1:0];P.stepF+=r*dt;P.walk+=r*dt*Math.PI;
+    let da=-P.face;while(da>Math.PI)da-=6.283;while(da<-Math.PI)da+=6.283;P.face+=da*Math.min(1,dt*8);
+    let n=0;while(P.stepF>=1){P.stepF-=1;n++;P.bank=Math.min(TR_MAX,P.bank+TR_GAIN);}
+    if(n){SFX.tread(k.gold,P.bank);const e=$('spdN');e.textContent=P.bank>=TR_MAX?'MAX '+TR_MAX:P.bank;$('spd').classList.add('on');
+      if(Math.random()<.5)spawn(P.x+rand(-.3,.3),P.y+.1,P.z+.3,rand(-.5,.5),rand(.5,1.5),3,.35,.08,k.gold?[1,.85,.3]:[.8,.85,.95],{g:2,emis:.6});}}
+  else{P.onTr=false;if(P.bank>0){if(P.gr&&P.ground)trStart();else{P.offT+=dt;if(P.offT>.7)trStart();}}}
+  if(G.boostT>0&&ctl){const b=Math.ceil(G.boostT);G.boostT-=dt;if(G.boostT<=0){G.boostT=0;G.boost=0;trHud();}else if(Math.ceil(G.boostT)!==b)trHud();
+    if(Math.hypot(P.vx,P.vz)>3&&Math.random()<dt*24)spawn(P.x+rand(-.5,.5),P.y+rand(.1,1),P.z+rand(.2,.8),0,0,4,.3,.07,[1,.95,.6],{g:0,emis:1});}}
+const TRF=[[.13,.13,.17],[1,.8,.22]],TRS=[[.5,.52,.6],[1,.86,.35]],TRD=[[.4,.9,1],[1,.95,.6]];
+function drawTread(k,top,t){const g=k.gold?1:0,F=TRF[g],x=k.x,z=k.z,w=k.hx*2,l=k.hz*2,fz=z-k.hz-.12,e=g?.25:.04,on=G.P.ground===k;
+  D(CUBE,x-k.hx-.09,top+.03,z,.18,.22,l+.3,F,e,1,0,0,.05);D(CUBE,x+k.hx+.09,top+.03,z,.18,.22,l+.3,F,e,1,0,0,.05);
+  const ph=(t*TR_RATE[g]*(on?.3:.06))%1;for(let i=0;i<4;i++)D(CUBE,x,top+.012,z-k.hz+((i+ph)/4)*l,w*.86,.02,.12,TRS[g],on?.4:.1);
+  D(CUBE,x-k.hx-.03,top+.75,fz,.12,1.5,.12,F,e);D(CUBE,x+k.hx+.03,top+.75,fz,.12,1.5,.12,F,e);D(CUBE,x,top+1.46,fz,w+.2,.14,.14,F,e);
+  D(CUBE,x-k.hx-.03,top+1.02,fz+.5,.1,.1,1,F,e);D(CUBE,x+k.hx+.03,top+1.02,fz+.5,.1,.1,1,F,e);
+  D(CUBE,x,top+1.2,fz-.04,w*.72,.44,.08,TRD[g],.7+.3*Math.sin(t*6),1,0,-.35);}
 /* Armor: bought for 3 stages. In each of those stages it soaks up one hit (not a fall), then it is broken until the next stage. */
 const ARM_COST=1000,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
 function armHud(){$('armb').textContent=G.armOk?SHIELD+' Armor on'+(G.arm?' \u00B7 '+G.arm+' more stage'+(G.arm>1?'s':''):''):(G.arm?SHIELD+' Armor: '+G.arm+' stage'+(G.arm>1?'s':'')+' left':'');}
 function armBreak(kind){const P=G.P;G.armOk=false;P.inv=1.6;armHud();save();SFX.armor();burst(P.x,P.y+.6,P.z,26,[[.6,.9,1],[1,1,1],[.4,.7,1]],6,{emis:.6});
   spawn(P.x,P.y+.5,P.z,0,0,0,.5,.8,ARMC,{ring:true,g:0,emis:1});floater('Armor broke!',P.x,P.y+1.8,P.z,'d');if(kind==='caught')chReset();}
-function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.armOk){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=.85;G.streak=0;G.bonks++;strk();
+function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.armOk){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=.85;P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
   for(const z of G.W.zones)if(z.in&&!z.done)z.hit=true;
   $('warn').style.opacity=0;
   if(kind==='bonk'){SFX.bonk();burst(P.x,P.y+.5,P.z,22,[[1,.85,.5],[1,1,1],[1,.6,.6]],5,{sph:true});}
   else if(kind==='caught'){SFX.chomp();burst(P.x,P.y+.5,P.z,26,[[.5,.4,.7],[.75,.65,.9],[1,1,1]],5,{sph:true});}else SFX.fall();
   floater(kind==='caught'?'Grumbles got you!':['Oopsie!','So close!','Nice try!','Almost!','Try again!'][(Math.random()*5)|0],P.x,Math.max(P.y,P.lastGY)+1.5,P.z,'');}
 function strk(){const e=$('strk');if(G.streak>=2){e.textContent='Dodge streak x'+G.streak;e.style.opacity=1;}else e.style.opacity=0;}
-function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;G.armS=0;G.armOk=false;armHud();
+function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').classList.remove('on');G.armS=0;G.armOk=false;armHud();
   if(ch.on&&ch.act){burst(ch.x,ch.y+.6,ch.z,26,[[.5,.4,.7],[.8,.7,.95]],5,{sph:true});floater('Bye bye, Grumbles!',ch.x,ch.y+2,ch.z,'');}ch.on=false;$('warn').style.opacity=0;
   for(let i=0;i<4;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),30,CONF,7,{emis:.4}),i*220);
   const bonus=10+5*G.stage,clean=G.bonks===0?20:0;const got=G.stageCoins;
@@ -768,7 +803,7 @@ function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;G.armS=0;G
 
 /* ====================== Tile events ====================== */
 let lastStepT=-9;
-function stepSnd(t,s,fresh){if(G.t-lastStepT<.055)return;lastStepT=G.t;
+function stepSnd(t,s,fresh){if(t.kind==='tread'){if(s>.5)N({type:'lowpass',f:300,d:.08,g:.4});return;}if(G.t-lastStepT<.055)return;lastStepT=G.t;
   if(t.kind==='bounce')return;if(t.kind==='boost'){SFX.zoom();return;}STEP[G.W.th.id](t,s,fresh);}
 function pressFx(t){const th=G.W.th.id,y=t.y+.1;
   if(th==='snow')burst(t.x,y,t.z,8,[[1,1,1],[.9,.95,1]],2.2,{sph:true,g:5});
@@ -802,12 +837,13 @@ function update(dt){
     if(t.mv){const m=t.mv,v=m.c+Math.sin(G.t*m.sp+m.ph)*m.amp;if(m.ax==='x'){t.dx=v-t.x;t.x=v;}else{t.dz=v-t.z;t.z=v;}}
     const tg=(P.ground===t)?-th.depth:0;t.ov+=((tg-t.off)*th.k-t.ov*th.c)*dt;t.off+=t.ov*dt;
     if(t.flash>0)t.flash=Math.max(0,t.flash-dt*2.2);
+    if(t.kind==='tread'&&G.state==='play'&&P.ground!==t&&Math.abs(t.z-P.z)<9){t.ft-=dt;if(t.ft<=0){t.ft=2.6;floater(t.gold?'GOLD +40%':'BLACK +20%',t.x,t.y+2.5,t.z,t.gold?'c':'');}}
     if(t.cr===1){t.crT-=dt;if(t.crT<=0){t.cr=2;t.fv=0;t.crT=2.8;}}
     else if(t.cr===2){t.fv-=30*dt;t.fall+=t.fv*dt;t.crT-=dt;if(t.crT<=0){t.cr=0;t.fall=0;}}
   }
   if(G.state==='dead'){G.deadT-=dt;if(G.deadT<=0){placeAt(W.cps[G.cp]);G.state='play';chReset();}}
   else{
-    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1),mg=FX&&FX.mag;
+    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(G.boostT>0?1+G.boost:1),mg=FX&&FX.mag;
     let ix=inp.x,iz=inp.y;const k=inp.k;
     if(k.ArrowLeft||k.KeyA)ix-=1;if(k.ArrowRight||k.KeyD)ix+=1;if(k.ArrowUp||k.KeyW)iz-=1;if(k.ArrowDown||k.KeyS)iz+=1;
     let mag=Math.hypot(ix,iz);if(mag>1){ix/=mag;iz/=mag;mag=1;}if(mag<.14||!ctl){ix=iz=0;mag=0;}
@@ -835,6 +871,7 @@ function update(dt){
       if(best!==g0||!wasGr){if(g0&&g0!==best&&th.id==='keys'&&wasGr)SFX.keyUp();onTile(best,!wasGr?clamp(-vy0/13,.55,1.2):(best.pressed?.5:.85),!wasGr);P.stepD=0;}
       else{const sp=Math.hypot(P.vx,P.vz);P.stepD+=sp*dt;P.walk+=sp*dt*4.2;if(P.stepD>1.2){P.stepD=0;stepSnd(best,.42,false);}}
     }else{P.gr=false;P.ground=null;}
+    trStep(dt,ctl);
     // squash spring
     P.sqv+=(-P.sq*160-P.sqv*14)*dt;P.sq=clamp(P.sq+P.sqv*dt,-.4,.4);
     if(P.inv>0)P.inv-=dt;
@@ -889,7 +926,7 @@ const mod=(a,n)=>((a%n)+n)%n;
 const DK=[.12,.1,.2];
 function drawChar(FX){const P=G.P,t=G.t,a=P.face,rx=Math.cos(a),rz=Math.sin(a),fx=Math.sin(a),fz=-Math.cos(a);
   const sy=1+P.sq+(P.gr?0:clamp(Math.abs(P.vy)*.012,0,.15)),sxz=1-(sy-1)*.5;
-  const mv=Math.hypot(P.vx,P.vz+P.bz)>.5&&P.gr,bob=mv?Math.abs(Math.sin(P.walk))*.07:0,by=P.y+bob;
+  const mv=(Math.hypot(P.vx,P.vz+P.bz)>.5||P.onTr)&&P.gr,bob=mv?Math.abs(Math.sin(P.walk))*.07:0,by=P.y+bob;
   const fancy=FX&&FX.fancy,em=fancy?.3:.05,tint=fancy?hsv(t*.35,.45,1):null;
   const part=(ro,uo,fo,sx,sy_,sz,col,e)=>D(SPH,P.x+rx*ro+fx*fo,by+uo*sy,P.z+rz*ro+fz*fo,sx,sy_,sz,col,e||0,1,-a,0,0);
   const two=(x,y,f,sx,sy_,sz,col,e)=>{part(-x,y,f,sx,sy_,sz,col,e);part(x,y,f,sx,sy_,sz,col,e);};
@@ -953,7 +990,8 @@ function render(){
       if(th.id==='snow'){const h=k.deco===1?.14:.04;D(CUBE,x,top+h/2,z,k.hx*1.9,h,k.hz*1.9,k.deco===1?[1,1,1]:[.8,.88,.97],.08,1,0,0,.05);}
       else if(th.id==='leaf'&&k.deco===1){for(let j=0;j<3;j++){const a=k.seed*40+j*2.1;D(CUBE,x+Math.cos(a)*k.hx*.5,top+.03+j*.012,z+Math.sin(a*1.3)*k.hz*.5,.5,.03,.32,th.decor[j],.05,1,a,0,0);}}
     }
-    if(k.kind==='check'){const fx=x-k.hx+.35,fz=z-k.hz+.35,fc=k.pressed?[.35,.95,.55]:[1,.5,.6];
+    if(k.kind==='tread')drawTread(k,top,t);
+    else if(k.kind==='check'){const fx=x-k.hx+.35,fz=z-k.hz+.35,fc=k.pressed?[.35,.95,.55]:[1,.5,.6];
       D(CUBE,fx,top+.9,fz,.1,1.8,.1,[1,1,1],.1);D(CUBE,fx+.36,top+1.55,fz,.62,.42,.06,fc,k.pressed?.5:.1,1,Math.sin(t*3+i)*.25,0,0);}
     else if(k.kind==='finish'){const y=top+2+Math.sin(t*2)*.2;D(SPH,x,y,z,.9,.9,.9,GOLD,.6);
       for(let j=0;j<5;j++){const a=t*1.8+j*1.2566;D(CUBE,x+Math.cos(a)*.95,y+Math.sin(a*2)*.15,z+Math.sin(a)*.95,.22,.22,.22,[1,1,.8],.9,1,a,a,0);}}
