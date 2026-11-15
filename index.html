@@ -725,6 +725,7 @@ function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
     b.addEventListener('click',()=>{G.chr=c[0];const P=G.P;if(P.gr){P.vy=7;P.gr=false;P.ground=null;}SFX.coin(2);save();showPick();});box.appendChild(b);}
   show('pick');}
 function go(){show(null);card('STAGE '+G.stage,G.W.th.name);G.state='play';chReset();
+  if(G.armS!==G.stage)G.armOk=false;if(G.revS!==G.stage){G.revOn=false;G.revLeft=0;}
   if(G.arm>0&&G.armS!==G.stage){G.arm--;G.armS=G.stage;G.armOk=true;save();}armHud();
   if(G.rev>0&&G.revS!==G.stage){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;save();}revHud();
   if(G.stage>=4)setTimeout(()=>{if(G.state==='play')toast('Run! Grumbles is coming!');},2700);}
@@ -754,10 +755,10 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
     if(G.coins<sc)return;G.coins-=sc;SFX.buy();prepStage(G.stage+1,0);showReady();});
   {const n=G.arm+(G.armOk?1:0),can=G.coins>=ARM_COST;
     row(SHIELD,'Armor','Blocks one hit in each of your next 3 stages. Falling still counts!'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?ARM_COST+' coins':'Need '+(ARM_COST-G.coins)+' more',can?'':'no',()=>{
-      if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;SFX.buy();hud();armHud();save();drawShop();});}
+      if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;if(!G.armOk){if(G.prev==='play'){G.arm--;G.armS=G.stage;G.armOk=true;SFX.armor();}else G.armS=0;}SFX.buy();hud();armHud();save();drawShop();});}
   {const n=G.rev+(G.revOn?1:0),can=G.coins>=REV_COST;
     row(HEART,'Instant Revive','For your next 2 stages: twice per stage, pop right back where you were instead of the checkpoint.'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?REV_COST+' coins':'Need '+(REV_COST-G.coins)+' more',can?'':'no',()=>{
-      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;SFX.buy();hud();revHud();save();drawShop();});}
+      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();});}
   for(const t of TR){const own=G.own.indexOf(t.id)>=0,can=G.coins>=t.cost;
     row(t.ic,t.name,t.desc,own?(G.eq===t.id?'Take off':'Equip'):(can?t.cost+' coins':'Need '+(t.cost-G.coins)+' more'),own?(G.eq===t.id?'on':'eq'):(can?'':'no'),()=>{
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
