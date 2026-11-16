@@ -86,6 +86,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 #spd b{display:block;font-size:64px;line-height:1;font-weight:900;color:#ffe66d}
 #spd small{font-size:16px;font-weight:900;letter-spacing:4px}
 #revb{margin-top:4px;font-size:14px;font-weight:800;color:#ffc4dd}
+#bnb{margin-top:6px;font-size:18px;font-weight:900;color:#ffe66d}
 #armb{margin-top:4px;font-size:14px;font-weight:800;color:#bfeaff}
 #coinp{pointer-events:auto;cursor:pointer}
 #coinp em{font-style:normal;font-size:11px;font-weight:900;background:#ffe66d;color:#4a2a00;border-radius:8px;padding:2px 6px;letter-spacing:.5px;text-shadow:none}
@@ -118,7 +119,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 <div id="warn"></div>
 <div id="fl"></div>
 <div id="hud" class="sh">
-  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div><div id="revb"></div><div id="bst"></div></div>
+  <div id="stg"><div id="stgn"></div><div id="bar"><div id="barf"></div></div><div id="strk"></div><div id="armb"></div><div id="revb"></div><div id="bst"></div><div id="bnb"></div></div>
   <div id="coinp"><i></i><span id="coinn">0</span><em>SHOP</em></div>
   <button id="pbtn" aria-label="Pause"><b></b><b></b></button>
 </div>
@@ -412,7 +413,12 @@ const THEMES=[
  {id:'crystal',name:'Crystal Cave',sky:['#04041a','#1a1047','#43207a'],pal:[[.26,.3,.52],[.32,.26,.52],[.22,.34,.5]],gc:[.8,.9,1],decor:[[.4,.9,1],[.8,.5,1],[1,.6,.9]],ds:0,wx:'spark',
   amb:{type:'lowpass',f:200,q:.8,g:.06,lfo:.05},k:420,c:30,depth:.07,pe:.7,press:t=>hsv(.5+(t.note%6)*.07,.55,1)}
 ];
-const HAZ=[1,.3,.42],GOLD=[1,.82,.2];
+const GOLD=[1,.82,.2];
+/* How the hazards look in each theme. a: main colour, b: second colour, sph: the slider is round, top: what sits on the slider, e: extra glow.
+   Only the looks change: the hit boxes are the same in every theme. */
+const HZ={keys:{a:[.62,.36,.95],b:[1,.88,.35],top:'glyph'},snow:{a:[.2,.45,.95],b:[1,1,1],top:'cap'},bubble:{a:[1,.35,.65],b:[1,.86,.92],sph:1,top:'cone'},
+ wood:{a:[.92,.2,.2],b:[.16,.12,.12],top:'band'},puddle:{a:[.3,.78,.3],b:[1,.9,.3],top:'band'},leaf:{a:[1,.5,.1],b:[.35,.62,.2],sph:1,top:'stem'},
+ jelly:{a:[.45,.24,.17],b:[1,.93,.8],top:'cap'},crystal:{a:[1,.3,.9],b:[.5,1,1],top:'cone',e:.35}};
 
 /* ====================== Painted backdrops ======================
    Each stage gets a scene painted ONCE onto a plain canvas that sits behind the 3D layer
@@ -613,6 +619,10 @@ function build(stage){
   const cpS=W.cps.slice(1).map(c=>({x:c.x,y:c.y,z:c.z,hx:c.hx}));   // a zoom-lane spot that sits right next to a checkpoint is dropped, so two treadmills never stand together
   (W.trSpots||[]).filter(q=>cpS.every(c=>Math.abs(c.z-q.z)>16)).concat(cpS).sort((a,b)=>b.z-a.z).forEach((c,i)=>{const g=i%2;W.tiles.push({x:g?c.x-(c.hx+2+.8):c.x+(c.hx+1.2+.8),y:c.y,z:c.z,hx:.8,hz:1.5,th:.5,kind:'tread',gold:!!g,
       off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:true,flash:0,col:[.17,.17,.21],pcol:[.17,.17,.21],glyph:-1,deco:0,note:0,dx:0,dz:0,mv:null,cp:-1,seed:0,ft:1});});
+  /* every third stage: a bonus door on a pad joined to the side of the first checkpoint after the start, on the side away from that checkpoint's treadmill. No R() calls. */
+  if(stage%BN_EVERY===0&&W.cps.length>1){const c=W.cps[1],tm=W.tiles.find(t=>t.kind==='tread'&&Math.abs(t.z-c.z)<.01),sd=tm&&tm.x>c.x?-1:1;
+    W.portal={x:c.x+sd*(c.hx+1.15),y:c.y,z:c.z,hx:1.1,hz:1.1,th:.5,kind:'portal',off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:true,flash:0,col:[.56,.32,.92],pcol:[.56,.32,.92],
+      glyph:GLY.star,deco:0,note:0,dx:0,dz:0,mv:null,cp:-1,seed:0,ft:1,ret:c};W.tiles.push(W.portal);}
   /* from stage DR_STAGE on: five speed drinks spread along the course, each floating over the plain tile nearest its spot. No R() calls here, so the course itself stays the same. */
   {const pl=W.tiles.filter(t=>t.kind==='tile'&&!t.mv);W.drinks=[];
     if(stage>=DR_STAGE)for(let k=0;k<DR_N;k++){const z=-W.total*(k+.7)/(DR_N+.4);let b=null,bd=1e9;
@@ -626,8 +636,17 @@ function build(stage){
   return W;
 }
 
+/* The little room behind the bonus door: a start pad, then a 5 x BN_ROWS floor with 12 coins in a zigzag, every other row with one more coin up in the air. */
+function buildBonus(stage,th){const W={tiles:[],haz:[],coins:[],zones:[],cps:[],decor:[],drinks:[],th,d:0,finish:null,endZ:0,total:1,bonus:true};
+  const mk=(x,z,w,kind,col,pcol)=>{const t={x,y:0,z,hx:w/2,hz:w/2,th:.5,kind,off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:false,flash:0,col,pcol,glyph:-1,deco:0,note:W.tiles.length,dx:0,dz:0,mv:null,cp:-1,seed:0};W.tiles.push(t);return t;};
+  const s=mk(0,-1.5*U,3*U-GAP,'check',[.95,.95,1],[.45,.95,.6]);s.cp=0;s.pressed=true;s.glyph=GLY.flag;W.cps.push(s);
+  const z0=-3*U,m=stage%2?1:-1,zx=[-2,-1,0,1,2,1,0,-1];
+  for(let i=0;i<BN_ROWS;i++){for(let j=0;j<5;j++)mk((j-2)*U,z0-(i+.5)*U,U-GAP,'tile',(i+j)%2?[1,.84,.32]:[1,.95,.72],[1,.6,.8]);
+    W.coins.push({x:m*zx[i%8]*U,y:.9,z:z0-(i+.5)*U,got:false,ph:i});if(i%2)W.coins.push({x:-m*zx[i%8]*U,y:2.3,z:z0-(i+.5)*U,got:false,ph:i+3});}
+  W.total=-(z0-BN_ROWS*U);W.endZ=-W.total;return W;}
+
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,bn:null,bnGo:false,bonusS:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
   P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
@@ -648,8 +667,8 @@ function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players'
 function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
-function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -710,7 +729,7 @@ function applyTheme(th){const r=document.documentElement.style;r.setProperty('--
 function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;G.revH.length=0;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;G.drT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
   G.cam.x=P.x;G.cam.y=P.y;G.cam.z=P.z;}
 function show(id){document.querySelectorAll('.ov').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');}
-function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);const W=G.W=build(n);cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
+function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);G.bn=null;G.bnGo=false;const W=G.W=build(n);if(W.portal&&G.bonusS===n)W.bonusUsed=true;bnHud();cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
   for(let i=0;i<=cpi;i++)W.cps[i].pressed=true;
   const c=W.cps[cpi];for(const z of W.zones)if(z.z1>c.z)z.done=true;
   G.parts.length=0;G.bonks=0;G.stageCoins=0;G.streak=0;G.ch.on=false;G.ch.act=false;$('warn').style.opacity=0;strk();
@@ -735,10 +754,10 @@ function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
   show('pick');}
 function go(){show(null);card('STAGE '+G.stage,G.W.th.name);G.state='play';chReset();
   if(G.revS!==G.stage){G.revOn=false;G.revLeft=0;}
-  armHud();
+  armHud();if(G.W.portal&&!G.W.bonusUsed)toast('Bonus door at the first checkpoint!');
   if(G.rev>0&&G.revS!==G.stage){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;save();}revHud();
-  if(G.stage>=4)setTimeout(()=>{if(G.state==='play')toast('Run! Grumbles is coming!');},2700);}
-function chReset(){const c=G.ch,P=G.P;c.on=G.stage>=4;c.act=false;c.delay=3.2;c.path.length=0;c.path.push([P.x,P.y,P.z]);c.i=0;c.x=P.x;c.y=P.y;c.z=P.z;c.near=0;c.sc=0;c.face=0;c.thT=0;$('warn').style.opacity=0;}
+  if(G.stage>=4)setTimeout(()=>{if(G.state==='play'&&!G.bn)toast('Run! Grumbles is coming!');},2700);}
+function chReset(){const c=G.ch,P=G.P;c.on=G.stage>=4&&!G.bn;c.act=false;c.delay=3.2;c.path.length=0;c.path.push([P.x,P.y,P.z]);c.i=0;c.x=P.x;c.y=P.y;c.z=P.z;c.near=0;c.sc=0;c.face=0;c.thT=0;$('warn').style.opacity=0;}
 function updChaser(dt){const c=G.ch,P=G.P;if(!c.on||G.state!=='play')return;
   const l=c.path[c.path.length-1];if(Math.hypot(P.x-l[0],P.y-l[1],P.z-l[2])>.5)c.path.push([P.x,P.y,P.z]);
   if(!c.act){c.delay-=dt;if(c.delay<=0){c.act=true;SFX.grum();burst(c.x,c.y+.6,c.z,14,[[.5,.4,.7],[.8,.7,.95]],3,{sph:true});}return;}
@@ -814,19 +833,35 @@ function revPlace(kind){const H=G.revH,P=G.P;   // after a fall, go back about h
     P.x=t.x+clamp(h.ox,-(t.hx-.3),t.hx-.3);P.z=t.z+clamp(h.oz,-(t.hz-.3),t.hz-.3);P.y=tt(t)+.05;P.vx=P.vy=P.vz=P.bz=0;P.gr=false;P.ground=null;P.lastGY=tt(t);P.inv=1.8;
     G.revLeft--;revHud();SFX.check();burst(P.x,P.y+.6,P.z,22,[[1,.6,.8],[1,1,1],[1,.85,.4]],5,{emis:.7});spawn(P.x,P.y+.2,P.z,0,0,0,.6,.7,[1,.6,.8],{ring:true,g:0,emis:1});floater(G.revLeft?'Revived! '+G.revLeft+' left':'Revived! Last one',P.x,P.y+2.3,P.z,'d');save();return true;}
   return false;}
+/* Bonus game: on every third stage a door stands beside the first checkpoint. Stepping onto its pad swaps the course for a small coin room
+   (G.bn keeps the real course meanwhile). Grab every coin before the clock runs out and you get BN_ARM Armor. Falling off or running out of time
+   just ends it, with no bonk counted. One try per stage: G.bonusS remembers the stage whose door was used. Both swaps happen at the top of update(). */
+const BN_EVERY=3,BN_TIME=25,BN_ROWS=8,BN_ARM=3,CLOCK='\u23F1\uFE0F';
+function bnHud(){const b=G.bn;$('bnb').textContent=b?CLOCK+' '+Math.ceil(b.t)+'s \u00B7 '+G.W.coins.filter(c=>!c.got).length+' coins left':'';}
+function bonusEnter(){const W0=G.W;if(G.bn||!W0.portal||W0.bonusUsed)return;W0.bonusUsed=true;G.bonusS=G.stage;save();
+  G.bn={W:W0,t:BN_TIME,end:''};G.W=buildBonus(G.stage,W0.th);G.parts.length=0;placeAt(G.W.cps[0]);chReset();
+  card('BONUS GAME','Grab every coin in '+BN_TIME+' seconds!');SFX.check();bnHud();}
+function bonusExit(){const b=G.bn,win=b.end==='win',W0=b.W,P=G.P;G.bn=null;G.W=W0;G.parts.length=0;{const c=W0.portal.ret;c.pressed=true;if(c.cp>G.cp)G.cp=c.cp;placeAt(c);}save();chReset();bnHud();
+  if(win){G.arm+=BN_ARM;armHud();save();SFX.clear();SFX.armor();toast('Bonus clear! You got '+BN_ARM+' Armor!');
+    for(let i=0;i<3;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),26,CONF,7,{emis:.4}),i*200);}
+  else{SFX.fall();toast(b.end==='time'?'Time is up! Good try!':'Oops! Good try!');}}
+function drawPortal(k,top,t){const x=k.x,z=k.z-k.hz+.2,on=!G.W.bonusUsed,F=on?[1,.86,.3]:[.5,.5,.58],e=on?.35:0;
+  D(CUBE,x-.85,top+1.1,z,.26,2.2,.26,F,e,1,0,0,.06);D(CUBE,x+.85,top+1.1,z,.26,2.2,.26,F,e,1,0,0,.06);D(CUBE,x,top+2.3,z,2.1,.3,.3,F,e,1,0,0,.06);
+  D(CUBE,x,top+1.08,z,1.44,2.14,.08,on?hsv(t*.25,.6,1):[.25,.25,.32],on?.85:0);
+  if(on)D(SPH,x,top+2.85+Math.sin(t*3)*.1,z,.42,.42,.42,GOLD,.8);}
 /* Armor: bought 3 at a time. G.arm is how many are left. Each one soaks up one hit (not a fall); the next one takes over right away, in the same stage or a later one. */
 const ARM_COST=1000,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
 function armHud(){$('armb').textContent=G.arm>0?SHIELD+' Armor x'+G.arm:'';}
 function armBreak(kind){const P=G.P;G.arm--;P.inv=1.6;armHud();save();SFX.armor();burst(P.x,P.y+.6,P.z,26,[[.6,.9,1],[1,1,1],[.4,.7,1]],6,{emis:.6});
   spawn(P.x,P.y+.5,P.z,0,0,0,.5,.8,ARMC,{ring:true,g:0,emis:1});floater(G.arm>0?'Armor broke! '+G.arm+' left':'Armor broke!',P.x,P.y+1.8,P.z,'d');if(kind==='caught')chReset();}
-function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.arm>0){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=G.revOn&&G.revLeft>0?.45:.85;G.deadKind=kind;G.drT=0;trHud();P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
+function die(kind){if(G.state!=='play')return;if(G.bn){if(!G.bn.end)G.bn.end='fall';return;}if(kind!=='fall'&&G.arm>0){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=G.revOn&&G.revLeft>0?.45:.85;G.deadKind=kind;G.drT=0;trHud();P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
   for(const z of G.W.zones)if(z.in&&!z.done)z.hit=true;
   $('warn').style.opacity=0;
   if(kind==='bonk'){SFX.bonk();burst(P.x,P.y+.5,P.z,22,[[1,.85,.5],[1,1,1],[1,.6,.6]],5,{sph:true});}
   else if(kind==='caught'){SFX.chomp();burst(P.x,P.y+.5,P.z,26,[[.5,.4,.7],[.75,.65,.9],[1,1,1]],5,{sph:true});}else SFX.fall();
   floater(kind==='caught'?'Grumbles got you!':['Oopsie!','So close!','Nice try!','Almost!','Try again!'][(Math.random()*5)|0],P.x,Math.max(P.y,P.lastGY)+1.5,P.z,'');}
 function strk(){const e=$('strk');if(G.streak>=2){e.textContent='Dodge streak x'+G.streak;e.style.opacity=1;}else e.style.opacity=0;}
-function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').classList.remove('on');G.revS=0;G.revOn=false;G.revLeft=0;revHud();
+function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').classList.remove('on');G.revS=0;G.revOn=false;G.revLeft=0;revHud();G.bonusS=0;
   if(ch.on&&ch.act){burst(ch.x,ch.y+.6,ch.z,26,[[.5,.4,.7],[.8,.7,.95]],5,{sph:true});floater('Bye bye, Grumbles!',ch.x,ch.y+2,ch.z,'');}ch.on=false;$('warn').style.opacity=0;
   for(let i=0;i<4;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),30,CONF,7,{emis:.4}),i*220);
   const bonus=10+5*G.stage,clean=G.bonks===0?20:0;const got=G.stageCoins;
@@ -856,6 +891,7 @@ function onTile(t,s,landed){const P=G.P;let fresh=false;
   if(t.kind==='check'&&t.cp>G.cp){G.cp=t.cp;SFX.check();toast('Checkpoint saved!');save();
     for(let i=0;i<20;i++){const a=i/20*6.283;spawn(t.x+Math.cos(a)*1.6,t.y+.2,t.z+Math.sin(a)*1.6,0,rand(2,5),0,1,.14,[.5,1,.7],{g:1,emis:.8});}}
   else if(t.kind==='finish'&&G.state==='play')stageClear();
+  else if(t.kind==='portal'&&G.state==='play'&&!G.bn&&!G.W.bonusUsed)G.bnGo=true;
   else if(t.kind==='crumble'&&t.cr===0){t.cr=1;t.crT=.6-.15*G.W.d;SFX.crack();}
   else if(t.kind==='bounce'){P.vy=17.5;P.gr=false;P.ground=null;P.coy=0;t.ov=-4;SFX.bounce();burst(t.x,t.y+.2,t.z,10,[[1,.6,.8],[1,1,1]],4,{sph:true});}
 }
@@ -866,6 +902,8 @@ function collideH(ax){const P=G.P,T=G.W.tiles;for(let i=0;i<T.length;i++){const 
   const top=tt(t);if(top<=P.y+STEPH||top-t.th>=P.y+PH)continue;const ox=t.hx+PR-Math.abs(P.x-t.x),oz=t.hz+PR-Math.abs(P.z-t.z);
   if(ox>0&&oz>0){if(ax===0){P.x+=P.x<t.x?-ox:ox;P.vx=0;}else{P.z+=P.z<t.z?-oz:oz;P.vz=0;P.bz=0;}}}}
 function update(dt){
+  if(G.bnGo){G.bnGo=false;bonusEnter();}
+  if(G.bn&&G.bn.end)bonusExit();
   const P=G.P,W=G.W,th=W.th,T=W.tiles;G.t+=dt;
   // tiles
   for(let i=0;i<T.length;i++){const t=T[i];
@@ -873,6 +911,7 @@ function update(dt){
     const tg=(P.ground===t)?-th.depth:0;t.ov+=((tg-t.off)*th.k-t.ov*th.c)*dt;t.off+=t.ov*dt;
     if(t.flash>0)t.flash=Math.max(0,t.flash-dt*2.2);
     if(t.kind==='tread'&&G.state==='play'&&P.ground!==t&&Math.abs(t.z-P.z)<9){t.ft-=dt;if(t.ft<=0){t.ft=2.6;floater(t.gold?'GOLD +40%':'BLACK +20%',t.x,t.y+2.5,t.z,t.gold?'c':'');}}
+    if(t.kind==='portal'&&!W.bonusUsed&&G.state==='play'&&Math.abs(t.z-P.z)<12){t.ft-=dt;if(t.ft<=0){t.ft=2.4;floater('BONUS GAME!',t.x,t.y+3.7,t.z,'c');}}
     if(t.cr===1){t.crT-=dt;if(t.crT<=0){t.cr=2;t.fv=0;t.crT=2.8;}}
     else if(t.cr===2){t.fv-=30*dt;t.fall+=t.fv*dt;t.crT-=dt;if(t.crT<=0){t.cr=0;t.fall=0;}}
   }
@@ -916,6 +955,7 @@ function update(dt){
       spawn(P.x+rand(-.25,.25),P.y+rand(.1,.7),P.z+rand(-.25,.25),0,rand(.2,1),id==='zoom'?3:0,rand(.5,.9),id==='star'?.17:.12,c,{g:-.5,emis:.9,sph:id==='star'||id==='rain'});}
     if(P.bz<-3&&Math.random()<dt*30)spawn(P.x+rand(-.5,.5),P.y+rand(.1,1),P.z+rand(.2,.8),0,0,4,.3,.07,[.8,.97,1],{g:0,emis:1});
     if(ctl){
+      if(G.bn){const b=G.bn,s0=Math.ceil(b.t);b.t-=dt;if(b.t<=0){b.t=0;b.end='time';}if(Math.ceil(b.t)!==s0)bnHud();}
       // hazards
       for(const h of W.haz){let hit=false;
         if(h.type==='slide'){h.x=h.cx+Math.sin(G.t*h.sp+h.ph)*h.amp;
@@ -934,7 +974,8 @@ function update(dt){
         if(Math.abs(c.z-P.z)>1)continue;
         if(Math.abs(c.x-P.x)<.85&&c.y>P.y-.5&&c.y<P.y+1.5){c.got=true;G.combo=(G.t-G.comboT<1.6)?G.combo+1:0;G.comboT=G.t;SFX.coin(G.combo);
           addCoins(cv,c.x,c.y+.3,c.z,'+'+cv+(G.combo>=3?' x'+(G.combo+1):''),'c');
-          burst(c.x,c.y,c.z,7+Math.min(G.combo,8),[GOLD,[1,1,.7]],3+Math.min(G.combo,6)*.3,{emis:.8,g:6});spawn(c.x,c.y,c.z,0,0,0,.4,.5,GOLD,{ring:true,g:0,emis:1});}}
+          burst(c.x,c.y,c.z,7+Math.min(G.combo,8),[GOLD,[1,1,.7]],3+Math.min(G.combo,6)*.3,{emis:.8,g:6});spawn(c.x,c.y,c.z,0,0,0,.4,.5,GOLD,{ring:true,g:0,emis:1});
+          if(G.bn){bnHud();if(!W.coins.some(q=>!q.got))G.bn.end='win';}}}
       // speed drinks
       for(const q of W.drinks){if(q.got||Math.abs(q.z-P.z)>1)continue;
         if(Math.abs(q.x-P.x)<.85&&q.y>P.y-.5&&q.y<P.y+1.5){q.got=true;G.drT=DR_TIME;SFX.drink();trHud();toast('Yum! Speed +'+Math.round(DR_ADD*100)+'% for '+DR_TIME+' seconds!');
@@ -1021,7 +1062,7 @@ function render(){
   for(let i=0;i<T.length;i++){const k=T[i];if(k.z<zmin||k.z>zmax)continue;if(k.cr===2&&k.fall<-25)continue;
     let x=k.x,z=k.z;const top=tt(k);if(k.cr===1){x+=Math.sin(t*70+i)*.04;z+=Math.cos(t*63+i)*.04;}
     const col=k.pressed?k.pcol:k.col;let em=(k.pressed?th.pe:0)+k.flash*.6;
-    if(k.kind==='check'&&k.pressed)em=.25+.15*Math.sin(t*4);else if(k.kind==='finish')em=.3+.2*Math.sin(t*5);else if(k.kind==='bounce')em=.2+.15*Math.sin(t*6);else if(k.kind==='boost')em=.2+.35*(.5+.5*Math.sin(t*9+k.z*1.4));
+    if(k.kind==='check'&&k.pressed)em=.25+.15*Math.sin(t*4);else if(k.kind==='finish')em=.3+.2*Math.sin(t*5);else if(k.kind==='bounce')em=.2+.15*Math.sin(t*6);else if(k.kind==='portal')em=W.bonusUsed?0:.3+.2*Math.sin(t*5);else if(k.kind==='boost')em=.2+.35*(.5+.5*Math.sin(t*9+k.z*1.4));
     else if(th.id==='jelly')em+=.1;
     gcol(k.kind==='tile'?(k.pressed&&th.id==='keys'?[1,1,1]:th.gc):(k.kind==='check'?(k.pressed?[1,1,1]:[.5,.55,.7]):k.kind==='finish'?[1,1,1]:k.kind==='crumble'?[.45,.3,.2]:[1,1,1]));
     D(CUBE,x,top-k.th/2,z,k.hx*2,k.th,k.hz*2,col,em,1,0,0,th.id==='keys'?.17:.1,k.glyph);
@@ -1029,20 +1070,27 @@ function render(){
       if(th.id==='snow'){const h=k.deco===1?.14:.04;D(CUBE,x,top+h/2,z,k.hx*1.9,h,k.hz*1.9,k.deco===1?[1,1,1]:[.8,.88,.97],.08,1,0,0,.05);}
       else if(th.id==='leaf'&&k.deco===1){for(let j=0;j<3;j++){const a=k.seed*40+j*2.1;D(CUBE,x+Math.cos(a)*k.hx*.5,top+.03+j*.012,z+Math.sin(a*1.3)*k.hz*.5,.5,.03,.32,th.decor[j],.05,1,a,0,0);}}
     }
-    if(k.kind==='tread')drawTread(k,top,t);
+    if(k.kind==='tread')drawTread(k,top,t);else if(k.kind==='portal')drawPortal(k,top,t);
     else if(k.kind==='check'){const fx=x-k.hx+.35,fz=z-k.hz+.35,fc=k.pressed?[.35,.95,.55]:[1,.5,.6];
       D(CUBE,fx,top+.9,fz,.1,1.8,.1,[1,1,1],.1);D(CUBE,fx+.36,top+1.55,fz,.62,.42,.06,fc,k.pressed?.5:.1,1,Math.sin(t*3+i)*.25,0,0);}
     else if(k.kind==='finish'){const y=top+2+Math.sin(t*2)*.2;D(SPH,x,y,z,.9,.9,.9,GOLD,.6);
       for(let j=0;j<5;j++){const a=t*1.8+j*1.2566;D(CUBE,x+Math.cos(a)*.95,y+Math.sin(a*2)*.15,z+Math.sin(a)*.95,.22,.22,.22,[1,1,.8],.9,1,a,a,0);}}
   }
   // hazards
-  for(const h of W.haz){if(h.z<zmin||h.z>zmax)continue;const em=.25+.2*Math.sin(t*7);
-    if(h.type==='slide'){D(CUBE,h.x,h.y,h.z,h.s[0],h.s[1],h.s[2],HAZ,em,1,0,0,.12);
-      D(SPH,h.x-.22,h.y+.12,h.z+h.s[2]/2,.2,.26,.08,[1,1,1],.3);D(SPH,h.x+.22,h.y+.12,h.z+h.s[2]/2,.2,.26,.08,[1,1,1],.3);
-      D(SPH,h.x-.22,h.y+.1,h.z+h.s[2]/2+.03,.1,.13,.06,[.1,.1,.15],0);D(SPH,h.x+.22,h.y+.1,h.z+h.s[2]/2+.03,.1,.13,.06,[.1,.1,.15],0);}
-    else if(h.type==='sweep'){D(CUBE,h.x,h.y+.35,h.z,.7,.7,.7,[.95,.95,1],.1,1,h.ang,0,.08);
-      for(let a=0;a<h.arms;a++)D(CUBE,h.x,h.y+.27,h.z,h.len*2,.4,.4,HAZ,em,1,h.ang+a*Math.PI/2,0,.08);}
-    else if(h.sc>.02){const r=h.r*2*h.sc;D(SPH,h.x,h.y-h.r+h.r*h.sc,h.z,r,r,r,HAZ,em);D(SPH,h.x,h.y-h.r+h.r*h.sc,h.z,r*1.02,r*.3,r*1.02,[1,1,1],.2,1,0,t*6*(h.sp>0?1:-1)*3,0);}
+  const hz=HZ[th.id]||HZ.keys;
+  for(const h of W.haz){if(h.z<zmin||h.z>zmax)continue;const em=.25+.2*Math.sin(t*7)+(hz.e||0);
+    if(h.type==='slide'){const sx=h.s[0],sy=h.s[1],sz=h.s[2],k=hz.sph?1.15:1,fz=h.z+sz/2+(hz.sph?.05:0),tp=hz.top;
+      if(tp==='glyph'){gcol(hz.b);D(CUBE,h.x,h.y,h.z,sx,sy,sz,hz.a,em,1,0,0,.2,GLY.X);}
+      else D(hz.sph?SPH:CUBE,h.x,h.y,h.z,sx*k,sy*k,sz*k,hz.a,em,1,0,0,.12);
+      if(tp==='cap')D(CUBE,h.x,h.y+sy/2+.05,h.z,sx*1.06,.18,sz*1.06,hz.b,.15,1,0,0,.06);
+      else if(tp==='band')D(CUBE,h.x,h.y-.24,h.z,sx*1.03,.16,sz*1.03,hz.b,.1,1,0,0,.03);
+      else if(tp==='cone')D(CONE,h.x,h.y+sy*k/2+.18,h.z,.5,.6,.5,hz.b,em);
+      else if(tp==='stem')D(CUBE,h.x,h.y+sy*k/2+.06,h.z,.17,.28,.17,hz.b,.1);
+      D(SPH,h.x-.22,h.y+.12,fz,.2,.26,.08,[1,1,1],.3);D(SPH,h.x+.22,h.y+.12,fz,.2,.26,.08,[1,1,1],.3);
+      D(SPH,h.x-.22,h.y+.1,fz+.03,.1,.13,.06,[.1,.1,.15],0);D(SPH,h.x+.22,h.y+.1,fz+.03,.1,.13,.06,[.1,.1,.15],0);}
+    else if(h.type==='sweep'){D(CUBE,h.x,h.y+.35,h.z,.7,.7,.7,hz.b,.1,1,h.ang,0,.08);
+      for(let a=0;a<h.arms;a++){D(CUBE,h.x,h.y+.27,h.z,h.len*2,.4,.4,hz.a,em,1,h.ang+a*Math.PI/2,0,.08);D(CUBE,h.x,h.y+.27,h.z,h.len*.9,.43,.43,hz.b,.1,1,h.ang+a*Math.PI/2,0,.08);}}
+    else if(h.sc>.02){const r=h.r*2*h.sc;D(SPH,h.x,h.y-h.r+h.r*h.sc,h.z,r,r,r,hz.a,em);D(SPH,h.x,h.y-h.r+h.r*h.sc,h.z,r*1.02,r*.3,r*1.02,hz.b,.2,1,0,t*6*(h.sp>0?1:-1)*3,0);}
   }
   // coins
   for(const c of W.coins){if(c.got||c.z<zmin||c.z>zmax)continue;const y=c.y+Math.sin(t*3+c.ph)*.1;
@@ -1116,9 +1164,9 @@ function pause(){if(G.state!=='play')return;G.state='pause';$('pause').classList
 function resume(){if(G.state!=='pause')return;G.state='play';$('pause').classList.remove('on');if(A.ctx)A.ctx.resume();}
 $('pbtn').addEventListener('click',pause);$('bRes').addEventListener('click',resume);
 $('bSnd').addEventListener('click',()=>{A.on=!A.on;if(A.master)A.master.gain.value=A.on?1:0;$('bSnd').textContent='Sound: '+(A.on?'On':'Off');});
-$('bRst').addEventListener('click',()=>{resume();placeAt(G.W.cps[G.cp]);chReset();});
-$('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showReady();});
-$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
+$('bRst').addEventListener('click',()=>{resume();placeAt(G.W.cps[G.bn?0:G.cp]);chReset();});
+$('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showReady();});
+$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
 $('bCont').addEventListener('click',()=>{initAudio();const s=load();if(s){G.coins=s.coins||0;G.best=s.best||s.s;prepStage(s.s,s.c);}else prepStage(1,0);showPick();});
 $('bNext').addEventListener('click',()=>{initAudio();prepStage(G.stage+1,0);showReady();});
 $('bPkOk').addEventListener('click',showReady);$('bBud').addEventListener('click',showPick);
