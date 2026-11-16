@@ -369,7 +369,8 @@ const SFX={
  thump(v){Tn({f:78,f2:46,d:.14,g:.12+.3*v});Tn({t:.16,f:70,f2:44,d:.12,g:.08+.2*v});},
  grum(){Tn({type:'sawtooth',f:150,f2:90,d:.5,g:.08,a:.05});Tn({f:110,f2:70,d:.6,g:.2,a:.05});},
  buy(){[0,4,7,12].forEach((k,i)=>Tn({t:i*.06,type:'triangle',f:523.25*Math.pow(2,k/12),d:.3,g:.18,rev:.3}));},
- drink(){for(let i=0;i<3;i++)Tn({t:i*.1,f:300+i*30,f2:170+i*30,d:.09,g:.14});N({t:.32,type:'highpass',f:4500,d:.4,g:.06});Tn({t:.34,f:520,f2:1040,d:.18,g:.08});},
+ drink(){for(let i=0;i<3;i++)Tn({t:i*.085,f:420+i*130,f2:900+i*260,d:.075,g:.13});   // three rising bubble bloops, a little fizz, then a happy three-note chime
+  N({t:.24,type:'highpass',f:5200,d:.3,g:.045});[1047,1319,1568].forEach((f,i)=>Tn({t:.28+i*.075,type:'triangle',f,d:.2,g:.085}));Tn({t:.51,f:2093,d:.3,g:.05});},
  armor(){N({type:'highpass',f:3000,d:.28,g:.35});Tn({f:980,f2:420,d:.25,g:.18});for(let i=0;i<4;i++)Tn({t:.03+i*.04,f:rand(2200,4200),d:.12,g:.05});},
  tread(gold,n){N({f:gold?1500:1000,q:2,d:.025,g:.11});if(n%20===0)Tn({f:420+n*1.5,d:.07,g:.06});},
  crack(){for(let i=0;i<5;i++)N({t:i*.03+rand(0,.02),f:rand(350,900),q:2,d:rand(.02,.05),g:rand(.15,.3)});},
@@ -612,9 +613,9 @@ function build(stage){
   const cpS=W.cps.slice(1).map(c=>({x:c.x,y:c.y,z:c.z,hx:c.hx}));   // a zoom-lane spot that sits right next to a checkpoint is dropped, so two treadmills never stand together
   (W.trSpots||[]).filter(q=>cpS.every(c=>Math.abs(c.z-q.z)>16)).concat(cpS).sort((a,b)=>b.z-a.z).forEach((c,i)=>{const g=i%2;W.tiles.push({x:g?c.x-(c.hx+2+.8):c.x+(c.hx+1.2+.8),y:c.y,z:c.z,hx:.8,hz:1.5,th:.5,kind:'tread',gold:!!g,
       off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:true,flash:0,col:[.17,.17,.21],pcol:[.17,.17,.21],glyph:-1,deco:0,note:0,dx:0,dz:0,mv:null,cp:-1,seed:0,ft:1});});
-  /* five speed drinks spread along the course, each floating over the plain tile nearest its spot. No R() calls here, so the course itself stays the same. */
+  /* from stage DR_STAGE on: five speed drinks spread along the course, each floating over the plain tile nearest its spot. No R() calls here, so the course itself stays the same. */
   {const pl=W.tiles.filter(t=>t.kind==='tile'&&!t.mv);W.drinks=[];
-    for(let k=0;k<DR_N;k++){const z=-W.total*(k+.7)/(DR_N+.4);let b=null,bd=1e9;
+    if(stage>=DR_STAGE)for(let k=0;k<DR_N;k++){const z=-W.total*(k+.7)/(DR_N+.4);let b=null,bd=1e9;
       for(const t of pl){if(W.drinks.some(q=>Math.abs(q.z-t.z)<6))continue;
         let c=Math.abs(t.z-z)+((t.note+k)%3)*.01;if(W.coins.some(q=>Math.abs(q.x-t.x)<.8&&Math.abs(q.z-t.z)<.8))c+=3;
         if(c<bd){bd=c;b=t;}}
@@ -776,8 +777,8 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
    Gold takes 20 steps a second and black 10, so ten seconds is 400 (gold) or 200 (black).
    Stepping off turns the bank into a 10-second boost: 100 speed = 10% faster. */
 const TR_RATE=[10,20],TR_GAIN=2,TR_MAX=600,TR_TIME=10;
-/* Speed drink: DR_N of them in every stage. Drinking one adds DR_ADD (50%) to the running speed for DR_TIME seconds. */
-const DR_N=5,DR_ADD=.5,DR_TIME=5,CUP='\uD83E\uDD64',DRC=[1,.32,.58];
+/* Speed drink: DR_N of them in every stage from stage DR_STAGE on. Drinking one adds DR_ADD (30%) to the running speed for DR_TIME seconds. */
+const DR_N=5,DR_ADD=.3,DR_TIME=5,DR_STAGE=5,CUP='\uD83E\uDD64',DRC=[1,.32,.58];
 function trHud(){const e=$('bst');e.textContent=(G.boostT>0?'\u26A1'+' +'+Math.round(G.boost*100)+'% \u00B7 '+Math.ceil(G.boostT)+'s':'')+(G.drT>0?(G.boostT>0?'  ':'')+CUP+' +'+Math.round(DR_ADD*100)+'% \u00B7 '+Math.ceil(G.drT)+'s':'');}
 function trStart(){const P=G.P;if(P.bank<1)return;G.boost=P.bank/1000;G.boostT=TR_TIME;P.bank=0;P.stepF=0;$('spd').classList.remove('on');toast('Speed +'+Math.round(G.boost*100)+'% for '+TR_TIME+' seconds!');SFX.zoom();SFX.dodge(3);
   burst(P.x,P.y+.6,P.z,20,[[1,.9,.4],[1,1,1],[.5,.9,1]],5,{emis:.7});trHud();}
