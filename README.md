@@ -29,6 +29,7 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
   - Butterfly Wings (1000): 3스테이지 동안 공중에서 한 번 더 점프
 - **최고 스테이지로 돌아가기**: 시작 화면과 일시정지 메뉴에 "Go to Stage N (my best)" 버튼이 나옵니다.
 - **실수 방지**: New Game과 Start Over를 누르면 확인 화면이 먼저 뜹니다.
+- **환호 동작**: 스테이지를 깨면 캐릭터가 빙글 돌며 점프합니다.
 
 ### 2026-11-14 이전
 - 기본 게임과 홈 화면 설치(PWA), 테마 8개
