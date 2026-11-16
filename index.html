@@ -136,7 +136,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <p>Run, hop and dodge across the comfiest, clickiest, crunchiest worlds.</p>
   <p id="hi"></p>
   <button class="btn" id="bPlay">Play</button>
-  <button class="btn alt" id="bCont" style="display:none">Continue</button>
+  <div class="row"><button class="btn alt" id="bCont" style="display:none">Continue</button><button class="btn alt" id="bBest" style="display:none"></button></div>
   <div class="row" style="margin-top:4px"><button class="btn alt" id="bLead">Leaderboard</button><button class="btn alt" id="bWho">Add Player</button></div>
   <p style="font-size:14px;opacity:.85;margin-top:16px">Left circle: move &nbsp;·&nbsp; Right circle: jump<br>Tap your coins to open the Shop. Best with headphones!</p>
 </div>
@@ -145,8 +145,15 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <button class="btn" id="bRes">Keep Playing</button>
   <button class="btn alt" id="bSnd">Sound: On</button>
   <button class="btn alt" id="bRst">Back to Checkpoint</button>
+  <button class="btn alt" id="bBest2" style="display:none"></button>
   <button class="btn alt" id="bLead2">Leaderboard</button>
   <button class="btn alt" id="bNew">Start Over (Stage 1)</button>
+</div>
+<div id="ask" class="ov sh">
+  <h2>Start over?</h2>
+  <p id="askT" style="max-width:420px"></p>
+  <button class="btn" id="askNo">No, keep my game</button>
+  <button class="btn alt" id="askYes">Yes, start from Stage 1</button>
 </div>
 <div id="clear" class="ov sh">
   <h2 id="clrT">Stage Clear!</h2>
@@ -684,7 +691,10 @@ function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()
   PL.list.push(p);usePlayer(p.id);}
 function refreshStart(){const p=me(),s=load(),b=$('bCont');$('hi').textContent=p?'Hi, '+p.name+'!':'';
   if(s){b.style.display='';b.textContent='Continue \u00B7 Stage '+s.s;$('bPlay').textContent='New Game';}else{b.style.display='none';$('bPlay').textContent='Play';}
+  {const e=$('bBest'),n=p?p.best||1:1;if(s&&n>s.s){e.style.display='';e.textContent='Go to Stage '+n+' (my best)';}else e.style.display='none';}
   $('bWho').textContent=p?'Switch Player':'Add Player';}
+/* Starting over wipes the stage and the coins, so it asks first. The best stage is never lost: the start screen and the pause menu offer a jump back to it. */
+function ask(from,yes){G.askFrom=from;G.askYes=yes;const n=G.best;$('askT').textContent='You will go back to Stage 1 and your coins go back to 0.'+(n>1?' Your best stage ('+n+') stays saved. You can jump back to it from the start screen or the pause menu.':'');show('ask');}
 let nameCb=null;
 function showName(cb){nameCb=cb||null;const i=$('nmIn');i.value='';show('name');try{i.focus();}catch(e){}}
 function nameOk(){const i=$('nmIn');let n=i.value.replace(/\s+/g,' ').trim().slice(0,12);if(!n)n='Player '+(PL.list.length+1);i.blur();addPlayer(n);const cb=nameCb;nameCb=null;if(cb)cb();else show('start');}
@@ -1197,13 +1207,16 @@ document.addEventListener('contextmenu',e=>e.preventDefault());
 let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list,input')))e.preventDefault();lastTouch=n;},{passive:false});
 
 /* ====================== Menus ====================== */
-function pause(){if(G.state!=='play')return;G.state='pause';$('pause').classList.add('on');if(A.ctx)A.ctx.suspend();}
+function pause(){if(G.state!=='play')return;{const e=$('bBest2');if(G.best>G.stage){e.style.display='';e.textContent='Go to Stage '+G.best+' (my best)';}else e.style.display='none';}G.state='pause';$('pause').classList.add('on');if(A.ctx)A.ctx.suspend();}
 function resume(){if(G.state!=='pause')return;G.state='play';$('pause').classList.remove('on');if(A.ctx)A.ctx.resume();}
 $('pbtn').addEventListener('click',pause);$('bRes').addEventListener('click',resume);
 $('bSnd').addEventListener('click',()=>{A.on=!A.on;if(A.master)A.master.gain.value=A.on?1:0;$('bSnd').textContent='Sound: '+(A.on?'On':'Off');});
 $('bRst').addEventListener('click',()=>{resume();placeAt(G.W.cps[G.bn?0:G.cp]);chReset();});
-$('bNew').addEventListener('click',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showReady();});
-$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showPick();};if(me())go1();else showName(()=>{if(load())show('start');else go1();});});
+$('bNew').addEventListener('click',()=>ask('pause',()=>{if(A.ctx)A.ctx.resume();G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showReady();}));
+$('askNo').addEventListener('click',()=>{G.askYes=null;show(G.askFrom||'start');});$('askYes').addEventListener('click',()=>{const f=G.askYes;G.askYes=null;if(f)f();});
+$('bBest2').addEventListener('click',()=>{if(G.state!=='pause')return;if(A.ctx)A.ctx.resume();prepStage(G.best,0);showReady();});
+$('bBest').addEventListener('click',()=>{initAudio();const s=load();if(!s)return;G.coins=s.coins||0;G.best=Math.max(G.best,s.best||1);prepStage(G.best,0);showPick();});
+$('bPlay').addEventListener('click',()=>{initAudio();const go1=()=>{G.coins=0;G.bonusS=0;G.revS=0;G.revOn=false;G.revLeft=0;prepStage(1,0);showPick();};if(me()){if(load())ask('start',go1);else go1();}else showName(()=>{if(load())show('start');else go1();});});
 $('bCont').addEventListener('click',()=>{initAudio();const s=load();if(s){G.coins=s.coins||0;G.best=s.best||s.s;prepStage(s.s,s.c);}else prepStage(1,0);showPick();});
 $('bNext').addEventListener('click',()=>{initAudio();prepStage(G.stage+1,0);showReady();});
 $('bPkOk').addEventListener('click',showReady);$('bBud').addEventListener('click',showPick);
