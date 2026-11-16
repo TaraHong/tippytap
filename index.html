@@ -646,7 +646,7 @@ function buildBonus(stage,th){const W={tiles:[],haz:[],coins:[],zones:[],cps:[],
   W.total=-(z0-BN_ROWS*U);W.endZ=-W.total;return W;}
 
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,bn:null,bnGo:false,bonusS:0,gon:[],pet:{x:0,y:0,z:0},chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,bn:null,bnGo:false,bonusS:0,gon:[],gs:{},pet:{x:0,y:0,z:0},chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
   P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
@@ -659,12 +659,13 @@ const TR=[
  {id:'star',name:'Star Power',desc:'Fast + rainbow + magnet, all in one!',cost:800,ic:'\uD83C\uDF1F',spd:1.15,fancy:1,mag:1}
 ];
 const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],['kid','Kiddo','\uD83D\uDC66'],['girl','Missy','\uD83D\uDC67'],['dino','Dino','\uD83E\uDD96'],['cat','Kitty','\uD83D\uDC31'],['pen','Pengu','\uD83D\uDC27']];
-/* Gear: things the buddy wears. Unlike trails, any number can be on at once (G.gon lists the ones that are on; bought ones sit in G.own next to the trails). */
+/* Gear: things the buddy wears. Unlike trails, any number can be on at once (G.gon lists the ones that are on; bought ones sit in G.own next to the trails).
+   Gear with st lasts that many stages, counting the one it is bought in: G.gs[id] is how many are left, one comes off at every stage clear, and at 0 it is gone and can be bought again. */
 const GEAR=[
  {id:'crown',name:'Royal Crown',desc:'A shiny golden crown that sparkles',cost:500,ic:'\uD83D\uDC51'},
  {id:'chick',name:'Baby Chick',desc:'A little chick follows you. +1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC25'},
- {id:'balloon',name:'Floaty Balloon',desc:'You fall slowly, so jumps go farther',cost:800,ic:'\uD83C\uDF88'},
- {id:'wings',name:'Butterfly Wings',desc:'Tap JUMP again in the air for a second jump',cost:1000,ic:'\uD83E\uDD8B'}
+ {id:'balloon',name:'Floaty Balloon',desc:'For 3 stages: you fall slowly, so jumps go farther',cost:800,ic:'\uD83C\uDF88',st:3},
+ {id:'wings',name:'Butterfly Wings',desc:'For 3 stages: tap JUMP again in the air for a second jump',cost:1000,ic:'\uD83E\uDD8B',st:3}
 ];
 const CRY={frog:.74,kid:1.16,girl:1.18,dino:.86,cat:.86,pen:.94};   // how high the crown sits on each buddy (bunny: .88)
 function wear(id){return G.gon.indexOf(id)>=0;}
@@ -676,8 +677,8 @@ function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players'
 function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
-function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.gs=G.gs;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -751,7 +752,7 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
   const box=$('rdTr');box.innerHTML='';
   if(!G.own.length)box.innerHTML='<p style="font-size:14px;margin:0">No trails yet. Buy one in the Shop!</p>';
   else{for(const g of GEAR){if(G.own.indexOf(g.id)<0)continue;const b=document.createElement('button');b.className='chip'+(wear(g.id)?' sel':'');
-    b.innerHTML='<b>'+g.ic+'</b>'+g.name.split(' ')[1];
+    b.innerHTML='<b>'+g.ic+'</b>'+g.name.split(' ')[1]+(g.st?' \u00B7 '+G.gs[g.id]:'');
     b.addEventListener('click',()=>{const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);else G.gon.push(g.id);SFX.keyUp();save();showReady();});box.appendChild(b);}}
   for(const t of TR){if(G.own.indexOf(t.id)<0)continue;const b=document.createElement('button');b.className='chip'+(G.eq===t.id?' sel':'');
     b.innerHTML='<b>'+t.ic+'</b>'+t.name.replace(' Trail','');
@@ -805,9 +806,9 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
       save();drawShop();});}
   for(const g of GEAR){const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=G.coins>=g.cost;
-    row(g.ic,g.name,g.desc,own?(on?'Take off':'Wear'):(can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
+    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?'Take off':'Wear'):(can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
       if(own){const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);else G.gon.push(g.id);SFX.keyUp();}
-      else{if(!can)return;G.coins-=g.cost;G.own.push(g.id);G.gon.push(g.id);SFX.buy();hud();}
+      else{if(!can)return;G.coins-=g.cost;G.own.push(g.id);G.gon.push(g.id);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
       save();drawShop();});}}
 /* Treadmills: stand on one and the buddy runs in place. Every step banks +2 speed.
    Gold takes 20 steps a second and black 10, so ten seconds is 400 (gold) or 200 (black).
@@ -885,6 +886,10 @@ function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;$('spd').c
   addCoins(bonus+clean,P.x,P.y+2,P.z,'+'+(bonus+clean),'d');
   $('clrT').textContent='Stage '+G.stage+' Clear!';
   $('stats').innerHTML='Coins this stage: <b>'+got+'</b><br>Stage bonus: <b>+'+bonus+'</b>'+(clean?'<br>No-bonk bonus: <b>+'+clean+'</b>':'')+'<br>Total coins: <b>'+G.coins+'</b>';
+  {let gl='';for(const g of GEAR){if(!g.st||G.own.indexOf(g.id)<0)continue;const n=G.gs[g.id]=(G.gs[g.id]||1)-1;
+      if(n>0)gl+='<br>'+g.ic+' '+g.name+': <b>'+n+'</b> more stage'+(n>1?'s':'');
+      else{delete G.gs[g.id];G.own.splice(G.own.indexOf(g.id),1);const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);gl+='<br>'+g.ic+' '+g.name+' is used up';}}
+    if(gl)$('stats').innerHTML+=gl;}
   G.best=Math.max(G.best,G.stage+1);save(G.stage+1,0);
   setTimeout(()=>{if(G.state==='clear')$('clear').classList.add('on');},1500);}
 
