@@ -369,6 +369,7 @@ const SFX={
  thump(v){Tn({f:78,f2:46,d:.14,g:.12+.3*v});Tn({t:.16,f:70,f2:44,d:.12,g:.08+.2*v});},
  grum(){Tn({type:'sawtooth',f:150,f2:90,d:.5,g:.08,a:.05});Tn({f:110,f2:70,d:.6,g:.2,a:.05});},
  buy(){[0,4,7,12].forEach((k,i)=>Tn({t:i*.06,type:'triangle',f:523.25*Math.pow(2,k/12),d:.3,g:.18,rev:.3}));},
+ drink(){for(let i=0;i<3;i++)Tn({t:i*.1,f:300+i*30,f2:170+i*30,d:.09,g:.14});N({t:.32,type:'highpass',f:4500,d:.4,g:.06});Tn({t:.34,f:520,f2:1040,d:.18,g:.08});},
  armor(){N({type:'highpass',f:3000,d:.28,g:.35});Tn({f:980,f2:420,d:.25,g:.18});for(let i=0;i<4;i++)Tn({t:.03+i*.04,f:rand(2200,4200),d:.12,g:.05});},
  tread(gold,n){N({f:gold?1500:1000,q:2,d:.025,g:.11});if(n%20===0)Tn({f:420+n*1.5,d:.07,g:.06});},
  crack(){for(let i=0;i<5;i++)N({t:i*.03+rand(0,.02),f:rand(350,900),q:2,d:rand(.02,.05),g:rand(.15,.3)});},
@@ -611,6 +612,13 @@ function build(stage){
   const cpS=W.cps.slice(1).map(c=>({x:c.x,y:c.y,z:c.z,hx:c.hx}));   // a zoom-lane spot that sits right next to a checkpoint is dropped, so two treadmills never stand together
   (W.trSpots||[]).filter(q=>cpS.every(c=>Math.abs(c.z-q.z)>16)).concat(cpS).sort((a,b)=>b.z-a.z).forEach((c,i)=>{const g=i%2;W.tiles.push({x:g?c.x-(c.hx+2+.8):c.x+(c.hx+1.2+.8),y:c.y,z:c.z,hx:.8,hz:1.5,th:.5,kind:'tread',gold:!!g,
       off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:true,flash:0,col:[.17,.17,.21],pcol:[.17,.17,.21],glyph:-1,deco:0,note:0,dx:0,dz:0,mv:null,cp:-1,seed:0,ft:1});});
+  /* five speed drinks spread along the course, each floating over the plain tile nearest its spot. No R() calls here, so the course itself stays the same. */
+  {const pl=W.tiles.filter(t=>t.kind==='tile'&&!t.mv);W.drinks=[];
+    for(let k=0;k<DR_N;k++){const z=-W.total*(k+.7)/(DR_N+.4);let b=null,bd=1e9;
+      for(const t of pl){if(W.drinks.some(q=>Math.abs(q.z-t.z)<6))continue;
+        let c=Math.abs(t.z-z)+((t.note+k)%3)*.01;if(W.coins.some(q=>Math.abs(q.x-t.x)<.8&&Math.abs(q.z-t.z)<.8))c+=3;
+        if(c<bd){bd=c;b=t;}}
+      if(b)W.drinks.push({x:b.x,y:b.y+1,z:b.z,got:false,ph:k*1.3});}}
   const nd=Math.round((W.total+38)/13);
   for(let k=0;k<nd;k++){const side=R()<.5?-1:1,z=8-R()*(W.total+30);let by=0,bd=1e9;for(const t of W.tiles){const dz=Math.abs(t.z-z);if(dz<bd){bd=dz;by=t.y;}}
     W.decor.push({x:side*(8.5+R()*15),y:by-1-R()*7,z,s:1+R()*1.5,k:(R()*2)|0,col:th.decor[(R()*3)|0],c2:th.decor[(R()*3)|0],ph:R()*6,gl:(R()*36)|0});}
@@ -618,7 +626,7 @@ function build(stage){
 }
 
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
   P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
@@ -698,7 +706,7 @@ function addCoins(n,x,y,z,label,cls){const b=G.earned;G.coins+=n;G.earned+=n;G.s
   else p.classList.add('pop');
   if(label)floater(label,x,y,z,cls);}
 function applyTheme(th){const r=document.documentElement.style;r.setProperty('--s1',th.sky[0]);r.setProperty('--s2',th.sky[1]);r.setProperty('--s3',th.sky[2]);paintBG(th);}
-function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;G.revH.length=0;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
+function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;G.revH.length=0;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;G.drT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;
   G.cam.x=P.x;G.cam.y=P.y;G.cam.z=P.z;}
 function show(id){document.querySelectorAll('.ov').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');}
 function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);const W=G.W=build(n);cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
@@ -768,7 +776,9 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTM
    Gold takes 20 steps a second and black 10, so ten seconds is 400 (gold) or 200 (black).
    Stepping off turns the bank into a 10-second boost: 100 speed = 10% faster. */
 const TR_RATE=[10,20],TR_GAIN=2,TR_MAX=600,TR_TIME=10;
-function trHud(){const e=$('bst');e.textContent=G.boostT>0?'\u26A1'+' +'+Math.round(G.boost*100)+'% \u00B7 '+Math.ceil(G.boostT)+'s':'';}
+/* Speed drink: DR_N of them in every stage. Drinking one adds DR_ADD (50%) to the running speed for DR_TIME seconds. */
+const DR_N=5,DR_ADD=.5,DR_TIME=5,CUP='\uD83E\uDD64',DRC=[1,.32,.58];
+function trHud(){const e=$('bst');e.textContent=(G.boostT>0?'\u26A1'+' +'+Math.round(G.boost*100)+'% \u00B7 '+Math.ceil(G.boostT)+'s':'')+(G.drT>0?(G.boostT>0?'  ':'')+CUP+' +'+Math.round(DR_ADD*100)+'% \u00B7 '+Math.ceil(G.drT)+'s':'');}
 function trStart(){const P=G.P;if(P.bank<1)return;G.boost=P.bank/1000;G.boostT=TR_TIME;P.bank=0;P.stepF=0;$('spd').classList.remove('on');toast('Speed +'+Math.round(G.boost*100)+'% for '+TR_TIME+' seconds!');SFX.zoom();SFX.dodge(3);
   burst(P.x,P.y+.6,P.z,20,[[1,.9,.4],[1,1,1],[.5,.9,1]],5,{emis:.7});trHud();}
 function trStep(dt,ctl){const P=G.P,k=P.gr&&P.ground&&P.ground.kind==='tread'?P.ground:null;
@@ -779,7 +789,9 @@ function trStep(dt,ctl){const P=G.P,k=P.gr&&P.ground&&P.ground.kind==='tread'?P.
       if(Math.random()<.5)spawn(P.x+rand(-.3,.3),P.y+.1,P.z+.3,rand(-.5,.5),rand(.5,1.5),3,.35,.08,k.gold?[1,.85,.3]:[.8,.85,.95],{g:2,emis:.6});}}
   else{P.onTr=false;if(P.bank>0){if(P.gr&&P.ground)trStart();else{P.offT+=dt;if(P.offT>.7)trStart();}}}
   if(G.boostT>0&&ctl){const b=Math.ceil(G.boostT);G.boostT-=dt;if(G.boostT<=0){G.boostT=0;G.boost=0;trHud();}else if(Math.ceil(G.boostT)!==b)trHud();
-    if(Math.hypot(P.vx,P.vz)>3&&Math.random()<dt*24)spawn(P.x+rand(-.5,.5),P.y+rand(.1,1),P.z+rand(.2,.8),0,0,4,.3,.07,[1,.95,.6],{g:0,emis:1});}}
+    if(Math.hypot(P.vx,P.vz)>3&&Math.random()<dt*24)spawn(P.x+rand(-.5,.5),P.y+rand(.1,1),P.z+rand(.2,.8),0,0,4,.3,.07,[1,.95,.6],{g:0,emis:1});}
+  if(G.drT>0&&ctl){const b=Math.ceil(G.drT);G.drT-=dt;if(G.drT<=0){G.drT=0;trHud();}else if(Math.ceil(G.drT)!==b)trHud();
+    if(Math.hypot(P.vx,P.vz)>3&&Math.random()<dt*20)spawn(P.x+rand(-.4,.4),P.y+rand(.1,.9),P.z+rand(.2,.7),0,rand(.5,1.5),2,.35,.08,DRC,{g:0,emis:1});}}
 const TRF=[[.13,.13,.17],[1,.8,.22]],TRS=[[.5,.52,.6],[1,.86,.35]],TRD=[[.4,.9,1],[1,.95,.6]];
 function drawTread(k,top,t){const g=k.gold?1:0,F=TRF[g],x=k.x,z=k.z,w=k.hx*2,l=k.hz*2,fz=z-k.hz-.12,e=g?.25:.04,on=G.P.ground===k;
   D(CUBE,x-k.hx-.09,top+.03,z,.18,.22,l+.3,F,e,1,0,0,.05);D(CUBE,x+k.hx+.09,top+.03,z,.18,.22,l+.3,F,e,1,0,0,.05);
@@ -806,7 +818,7 @@ const ARM_COST=1000,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
 function armHud(){$('armb').textContent=G.arm>0?SHIELD+' Armor x'+G.arm:'';}
 function armBreak(kind){const P=G.P;G.arm--;P.inv=1.6;armHud();save();SFX.armor();burst(P.x,P.y+.6,P.z,26,[[.6,.9,1],[1,1,1],[.4,.7,1]],6,{emis:.6});
   spawn(P.x,P.y+.5,P.z,0,0,0,.5,.8,ARMC,{ring:true,g:0,emis:1});floater(G.arm>0?'Armor broke! '+G.arm+' left':'Armor broke!',P.x,P.y+1.8,P.z,'d');if(kind==='caught')chReset();}
-function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.arm>0){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=G.revOn&&G.revLeft>0?.45:.85;G.deadKind=kind;P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
+function die(kind){if(G.state!=='play')return;if(kind!=='fall'&&G.arm>0){armBreak(kind);return;}const P=G.P;G.state='dead';G.deadT=G.revOn&&G.revLeft>0?.45:.85;G.deadKind=kind;G.drT=0;trHud();P.bank=0;P.stepF=0;P.onTr=false;$('spd').classList.remove('on');G.streak=0;G.bonks++;strk();
   for(const z of G.W.zones)if(z.in&&!z.done)z.hit=true;
   $('warn').style.opacity=0;
   if(kind==='bonk'){SFX.bonk();burst(P.x,P.y+.5,P.z,22,[[1,.85,.5],[1,1,1],[1,.6,.6]],5,{sph:true});}
@@ -865,7 +877,7 @@ function update(dt){
   }
   if(G.state==='dead'){G.deadT-=dt;if(G.deadT<=0){if(!(G.revOn&&G.revLeft>0&&revPlace(G.deadKind)))placeAt(W.cps[G.cp]);G.state='play';chReset();}}
   else{
-    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(G.boostT>0?1+G.boost:1),mg=FX&&FX.mag;
+    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(1+(G.boostT>0?G.boost:0)+(G.drT>0?DR_ADD:0)),mg=FX&&FX.mag;
     let ix=inp.x,iz=inp.y;const k=inp.k;
     if(k.ArrowLeft||k.KeyA)ix-=1;if(k.ArrowRight||k.KeyD)ix+=1;if(k.ArrowUp||k.KeyW)iz-=1;if(k.ArrowDown||k.KeyS)iz+=1;
     let mag=Math.hypot(ix,iz);if(mag>1){ix/=mag;iz/=mag;mag=1;}if(mag<.14||!ctl){ix=iz=0;mag=0;}
@@ -922,6 +934,10 @@ function update(dt){
         if(Math.abs(c.x-P.x)<.85&&c.y>P.y-.5&&c.y<P.y+1.5){c.got=true;G.combo=(G.t-G.comboT<1.6)?G.combo+1:0;G.comboT=G.t;SFX.coin(G.combo);
           addCoins(cv,c.x,c.y+.3,c.z,'+'+cv+(G.combo>=3?' x'+(G.combo+1):''),'c');
           burst(c.x,c.y,c.z,7+Math.min(G.combo,8),[GOLD,[1,1,.7]],3+Math.min(G.combo,6)*.3,{emis:.8,g:6});spawn(c.x,c.y,c.z,0,0,0,.4,.5,GOLD,{ring:true,g:0,emis:1});}}
+      // speed drinks
+      for(const q of W.drinks){if(q.got||Math.abs(q.z-P.z)>1)continue;
+        if(Math.abs(q.x-P.x)<.85&&q.y>P.y-.5&&q.y<P.y+1.5){q.got=true;G.drT=DR_TIME;SFX.drink();trHud();toast('Yum! Speed +'+Math.round(DR_ADD*100)+'% for '+DR_TIME+' seconds!');
+          burst(q.x,q.y,q.z,16,[DRC,[1,1,1],[1,.9,.3]],4.5,{emis:.8,g:6});spawn(q.x,q.y,q.z,0,0,0,.45,.6,DRC,{ring:true,g:0,emis:1});}}
       // dodge zones
       for(const z of W.zones){if(z.done)continue;if(P.z<z.z0)z.in=true;
         if(P.z<z.z1&&P.gr){z.done=true;if(!z.hit){G.streak++;const b=3+Math.min(G.streak,5)*2;SFX.dodge(G.streak);
@@ -1030,6 +1046,10 @@ function render(){
   // coins
   for(const c of W.coins){if(c.got||c.z<zmin||c.z>zmax)continue;const y=c.y+Math.sin(t*3+c.ph)*.1;
     D(SPH,c.x,y,c.z,.62,.62,.16,GOLD,.55,1,t*3+c.ph,0,0);D(SPH,c.x,y,c.z,.38,.38,.2,[1,.95,.6],.7,1,t*3+c.ph,0,0);}
+  // speed drinks: cup, white band, lid, straw
+  for(const q of W.drinks){if(q.got||q.z<zmin||q.z>zmax)continue;const y=q.y+Math.sin(t*2.5+q.ph)*.12,a=t*1.6+q.ph;
+    D(CUBE,q.x,y,q.z,.44,.58,.44,DRC,.5,1,a,0,.1);D(CUBE,q.x,y-.04,q.z,.47,.16,.47,[1,1,1],.45,1,a,0,.05);
+    D(CUBE,q.x,y+.32,q.z,.5,.08,.5,[1,1,1],.5,1,a,0,.05);D(CUBE,q.x,y+.55,q.z,.08,.42,.08,[1,.9,.3],.7,1,a,0,0);}
   // chaser
   const ch=G.ch;if(ch.on&&ch.act){const a=ch.face,rx=Math.cos(a),rz=Math.sin(a),fx=Math.sin(a),fz=-Math.cos(a),s=ch.sc*(1+Math.sin(t*6)*.04),by=ch.y+.25+Math.sin(t*3)*.12;
     const cp=(ro,uo,fo,sx,sy,sz,col,e)=>D(SPH,ch.x+(rx*ro+fx*fo)*s,by+uo*s,ch.z+(rz*ro+fz*fo)*s,sx*s,sy*s,sz*s,col,e||0,1,-a,0,0);
