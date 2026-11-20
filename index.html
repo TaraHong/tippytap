@@ -191,7 +191,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <p style="max-width:440px;margin:0 0 6px">On the <b>old</b> game: tap <b>Copy my save code</b>.<br>On the <b>new</b> game: paste it below and tap <b>Load save</b>.</p>
   <button class="btn" id="bMvCopy">Copy my save code</button>
   <a id="mvLink" class="btn alt" style="display:none;text-decoration:none" target="_blank" rel="noopener">Open the new game with my save</a>
-  <textarea id="mvTx" rows="3" spellcheck="false" autocomplete="off" placeholder="Paste a save code here"></textarea>
+  <textarea id="mvTx" rows="3" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Paste a save code here"></textarea>
   <button class="btn alt" id="bMvLoad">Load save</button>
   <p id="mvMsg" style="font-size:15px;font-weight:900;margin:4px 0;max-width:440px"></p>
   <button class="btn alt" id="bMvX">Back</button>
@@ -731,8 +731,19 @@ function refreshStart(){const p=me(),s=load(),b=$('bCont');$('hi').textContent=p
    replacing any with the same id, and keeps the other players already here. */
 const NEW_HOME='https://tippytap-beta.vercel.app/';
 function mvCode(){return 'TT1:'+btoa(unescape(encodeURIComponent(JSON.stringify({cur:PL.cur,list:PL.list}))));}
-function mvRead(c){c=String(c||'').replace(/\s+/g,'');const i=c.indexOf('TT1:');if(i<0)return null;try{const v=JSON.parse(decodeURIComponent(escape(atob(c.slice(i+4)))));
-  if(!v||!Array.isArray(v.list)||!v.list.length||!v.list.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'))return null;return v;}catch(e){return null;}}
+/* Reading is forgiving: the code may arrive inside a link, percent-encoded (TT1%3A...), with spaces, line breaks or other text around it.
+   It returns {v} on success or {err} with the reason, so the message can say what went wrong. */
+const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_';
+function mvRead(c){c=String(c||'');if(!c.trim())return{err:'empty'};
+  for(let k=0;k<3&&/%[0-9A-Fa-f]{2}/.test(c);k++){try{c=decodeURIComponent(c);}catch(e){break;}}
+  let i=c.search(/TT1\s*:/),b='';if(i>=0)i=c.indexOf(':',i)+1;else{i=c.search(/eyJ/);if(i<0)return{err:'none'};}
+  const seg=[''];for(;i<c.length;i++){const ch=c[i];if(/\s/.test(ch)){if(seg[seg.length-1])seg.push('');continue;}if(B64.indexOf(ch)<0)break;seg[seg.length-1]+=ch;}
+  const dec=t=>{t=t.replace(/=+$/,'').replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';try{return JSON.parse(decodeURIComponent(escape(atob(t))));}catch(e){return null;}};
+  let v=null;for(let n=seg.length;n>0&&!v;n--){b=seg.slice(0,n).join('');v=dec(b);}   // words pasted after the code are dropped one by one
+  b=seg.join('');if(!v)return{err:'cut',n:b.length};
+  if(!v||!Array.isArray(v.list)||!v.list.length)return{err:'cut',n:b.length};
+  v.list=v.list.filter(p=>p&&typeof p==='object'&&p.id!=null).map(p=>Object.assign(p,{id:String(p.id),name:String(p.name||'Player').slice(0,12)}));
+  if(!v.list.length)return{err:'cut',n:b.length};return{v};}
 function showMove(code){const m=$('mvMsg'),l=$('mvLink');m.textContent='';$('mvTx').value=code||'';
   if(PL.list.length&&location.hostname.endsWith('github.io')){l.style.display='';l.href=NEW_HOME+'#save='+mvCode();}else l.style.display='none';
   if(code)m.textContent='A save code is ready. Tap Load save!';show('move');}
@@ -740,7 +751,7 @@ function mvCopy(){const m=$('mvMsg'),t=$('mvTx');if(!PL.list.length){m.textConte
   t.value=mvCode();const ok=()=>{m.textContent='Copied! Now open the new game and paste it there.';};
   const sel=()=>{try{t.focus();t.select();document.execCommand('copy');ok();}catch(e){m.textContent='Press and hold the code to copy it.';}};
   try{navigator.clipboard.writeText(t.value).then(ok,sel);}catch(e){sel();}}
-function mvLoad(){const m=$('mvMsg'),v=mvRead($('mvTx').value);if(!v){m.textContent='That code does not look right. Copy it again from the old game.';return;}
+function mvLoad(){const m=$('mvMsg'),r=mvRead($('mvTx').value),v=r.v;if(!v){m.textContent=r.err==='empty'?'The box is empty. Tap in the box and paste the code first.':r.err==='none'?'There is no save code in that text. It should start with TT1: (got '+$('mvTx').value.trim().length+' letters).':'The code looks cut off ('+r.n+' letters). On the old game, tap Copy my save code again and paste it all.';return;}
   for(const p of v.list){const i=PL.list.findIndex(q=>q.id===p.id);if(i>=0)PL.list[i]=p;else PL.list.push(p);}
   PL.cur=v.list.some(p=>p.id===v.cur)?v.cur:v.list[0].id;plSave();usePlayer(PL.cur);const p=me();
   m.textContent='Welcome back, '+p.name+'! Stage '+(p.s||1)+' · '+(p.coins||0)+' coins';SFX.clear();try{history.replaceState(null,'',location.pathname);}catch(e){}
@@ -1318,7 +1329,7 @@ $('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventL
 $('bLeadX').addEventListener('click',()=>show(G.lbFrom||'start'));
 $('bMove').addEventListener('click',()=>showMove(''));$('bMvCopy').addEventListener('click',mvCopy);$('bMvLoad').addEventListener('click',()=>{initAudio();mvLoad();});$('bMvX').addEventListener('click',()=>show('start'));
 plLoad();if(me())usePlayer(PL.cur);else refreshStart();
-{const h=location.hash;if(h.indexOf('#save=')===0)showMove(decodeURIComponent(h.slice(6)));}
+{const h=location.hash;if(h.indexOf('#save=')===0)showMove(h.slice(6));}
 if(PL.list.length)setTimeout(()=>lbSync(),1500);
 
 /* ====================== Main loop ====================== */
