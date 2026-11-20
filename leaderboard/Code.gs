@@ -54,7 +54,7 @@ function clean_(p) {
   // no control characters, no leading = + - @ (so a name can never become a formula), max 12 chars
   let name = String(p.name || '').replace(/[\u0000-\u001f<>]/g, '').replace(/^[=+\-@\s]+/, '').trim().slice(0, 12);
   if (!name) name = 'Player';
-  const buddy = /^(bunny|frog|kid|girl|dino|cat|pen)$/.test(String(p.chr)) ? String(p.chr) : 'bunny';
+  const buddy = /^(bunny|frog|kid|girl|dino|cat|pen|fox|uni|bot)$/.test(String(p.chr)) ? String(p.chr) : 'bunny';
   const best = Math.max(1, Math.min(999, Math.floor(Number(p.best) || 1)));
   const coins = Math.max(0, Math.min(9999999, Math.floor(Number(p.earned) || 0)));
   return { id: id, name: name, buddy: buddy, best: best, coins: coins };
