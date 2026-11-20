@@ -971,7 +971,7 @@ const BN_EVERY=3,BN_TIME=25,BN_ROWS=8,BN_ARM=3,CLOCK='\u23F1\uFE0F';
 function bnHud(){const b=G.bn;$('bnb').textContent=b?CLOCK+' '+Math.ceil(b.t)+'s \u00B7 '+G.W.coins.filter(c=>!c.got).length+' coins left':'';}
 function bonusEnter(){const W0=G.W;if(G.bn||!W0.portal||W0.bonusUsed)return;W0.bonusUsed=true;G.bonusS=G.stage;save();
   G.bn={W:W0,t:BN_TIME,end:''};G.W=buildBonus(G.stage,W0.th);G.parts.length=0;placeAt(G.W.cps[0]);chReset();bgc.style.filter='brightness(.35)';
-  {const fx=tr();card('BONUS GAME','Grab every coin in '+BN_TIME+' seconds!'+(fx&&fx.mag?' No magnet here!':''));}SFX.check();bnHud();}
+  card('BONUS GAME','Grab every coin in '+BN_TIME+' seconds!');SFX.check();bnHud();}
 function bonusExit(){const b=G.bn,win=b.end==='win',W0=b.W,P=G.P;G.bn=null;G.W=W0;bgc.style.filter=W0.tw==='night'?'brightness(.3)':'';G.parts.length=0;{const c=W0.portal.ret;c.pressed=true;if(c.cp>G.cp)G.cp=c.cp;placeAt(c);}save();chReset();bnHud();
   if(win){G.arm+=BN_ARM;armHud();save();SFX.clear();SFX.armor();toast('Bonus clear! You got '+BN_ARM+' Armor!');
     for(let i=0;i<3;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),26,CONF,7,{emis:.4}),i*200);}
@@ -1052,7 +1052,7 @@ function update(dt){
   }
   if(G.state==='dead'){G.deadT-=dt;if(G.deadT<=0){if(!(G.revOn&&G.revLeft>0&&revPlace(G.deadKind)))placeAt(W.cps[G.cp]);G.state='play';chReset();}}
   else{
-    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(1+(G.boostT>0?G.boost:0)+(G.drT>0?DR_ADD:0)),mg=FX&&FX.mag&&!G.bn;   // the magnet is off inside the bonus room, so its coins have to be reached
+    const ctl=G.state==='play',FX=tr(),spd=SPEED*(FX&&FX.spd||1)*(1+(G.boostT>0?G.boost:0)+(G.drT>0?DR_ADD:0)),mg=FX&&FX.mag;
     let ix=inp.x,iz=inp.y;const k=inp.k;
     if(k.ArrowLeft||k.KeyA)ix-=1;if(k.ArrowRight||k.KeyD)ix+=1;if(k.ArrowUp||k.KeyW)iz-=1;if(k.ArrowDown||k.KeyS)iz+=1;
     let mag=Math.hypot(ix,iz);if(mag>1){ix/=mag;iz/=mag;mag=1;}if(mag<.14||!ctl){ix=iz=0;mag=0;}
