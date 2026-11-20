@@ -9,6 +9,8 @@
 - **무엇**: 아이를 위한 3D 장애물 달리기 게임. 발판마다 다른 ASMR 발소리가 나고, 코인을 모아 Shop에서 아이템을 삽니다. 게임 안의 글은 전부 영어입니다.
 - **형태**: 외부 라이브러리와 이미지·소리 파일이 없는 단일 `index.html`. 그래픽은 직접 짠 WebGL, 소리는 전부 Web Audio로 합성합니다.
 - **배포**: GitHub Pages, `main` 브랜치 루트. 주소는 `https://tarahong.github.io/tippytap/`
+- **Vercel에도 배포** (2026-11-20, 사용자 요청): 프로젝트 `tippytap`(팀 `tarahongs-projects`, `prj_x3s0JeoCIeseGBsgqt2U28F9P41f`)이 GitHub 리포와 연결돼 있어 `main`에 푸시하면 Vercel도 자동으로 다시 배포합니다. 주소는 `https://tippytap-beta.vercel.app` (`tippytap.vercel.app`은 이미 다른 사람이 써서 Vercel이 `-beta`를 붙임). 빌드 단계 없이 파일을 그대로 올립니다. 배포 보호는 기본값(Standard Protection)이라 미리보기 주소는 Vercel 로그인이 필요하고 위 주소는 공개입니다. 세션에서는 이 주소에 접속할 수 없어 공개 여부를 직접 확인하지 못했습니다.
+- **기기 저장은 주소마다 따로입니다.** `localStorage`가 출처별이라 GitHub Pages 주소에서 쌓은 기록(스테이지, 코인, 보석)은 Vercel 주소에서 보이지 않습니다. 두 주소를 섞어 쓰면 기록이 둘로 나뉩니다.
 - **설치**: 홈 화면에 추가하면 오프라인에서도 되는 PWA입니다.
 - **같이 관리하는 다른 게임**: `TaraHong/kidsgame` (꼬마 슈팅 놀이터). 그쪽은 Pages가 `gh-pages` 브랜치에서 나가므로 `main`과 `gh-pages`에 같이 푸시합니다. 이 문서는 Tippy Tap만 다룹니다.
 
