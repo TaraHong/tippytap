@@ -2,7 +2,7 @@
 
 다른 세션에서 이 게임 작업을 이어갈 때 먼저 읽는 문서입니다. 코드를 바꾸면 이 문서도 같이 고쳐 주세요.
 
-마지막 갱신: 2026-11-20 (서비스 워커 캐시 `tippytap-v18` 기준)
+마지막 갱신: 2026-11-20 (서비스 워커 캐시 `tippytap-v19` 기준)
 
 ## 한눈에 보기
 
@@ -10,7 +10,8 @@
 - **형태**: 외부 라이브러리와 이미지·소리 파일이 없는 단일 `index.html`. 그래픽은 직접 짠 WebGL, 소리는 전부 Web Audio로 합성합니다.
 - **배포**: GitHub Pages, `main` 브랜치 루트. 주소는 `https://tarahong.github.io/tippytap/`
 - **Vercel에도 배포** (2026-11-20, 사용자 요청): 프로젝트 `tippytap`(팀 `tarahongs-projects`, `prj_x3s0JeoCIeseGBsgqt2U28F9P41f`)이 GitHub 리포와 연결돼 있어 `main`에 푸시하면 Vercel도 자동으로 다시 배포합니다. 주소는 `https://tippytap-beta.vercel.app` (`tippytap.vercel.app`은 이미 다른 사람이 써서 Vercel이 `-beta`를 붙임). 빌드 단계 없이 파일을 그대로 올립니다. 배포 보호는 기본값(Standard Protection)이라 미리보기 주소는 Vercel 로그인이 필요하고 위 주소는 공개입니다. 세션에서는 이 주소에 접속할 수 없어 공개 여부를 직접 확인하지 못했습니다.
-- **기기 저장은 주소마다 따로입니다.** `localStorage`가 출처별이라 GitHub Pages 주소에서 쌓은 기록(스테이지, 코인, 보석)은 Vercel 주소에서 보이지 않습니다. 두 주소를 섞어 쓰면 기록이 둘로 나뉩니다.
+- **기기 저장은 주소마다 따로입니다.** `localStorage`가 출처별이라 GitHub Pages 주소에서 쌓은 기록(스테이지, 코인, 보석)은 Vercel 주소에서 보이지 않습니다. 두 주소를 섞어 쓰면 기록이 둘로 나뉩니다. 그래서 **Move my game**(아래)을 넣었습니다.
+- **리포 비공개 전환 계획** (2026-11-20): 사용자가 리포를 비공개로 하고 싶어 함. 무료 계정이면 비공개 리포의 GitHub Pages가 멈추므로, 먼저 Move my game으로 아이 기록을 Vercel 주소로 옮긴 뒤 비공개로 바꾸기로 함. 세션의 `gh`에는 이 리포의 admin 권한이 있어 `gh api -X PATCH repos/Tarahong/tippytap -F private=true`로 바꿀 수 있음(Pages API는 프록시가 막음).
 - **설치**: 홈 화면에 추가하면 오프라인에서도 되는 PWA입니다.
 - **같이 관리하는 다른 게임**: `TaraHong/kidsgame` (꼬마 슈팅 놀이터). 그쪽은 Pages가 `gh-pages` 브랜치에서 나가므로 `main`과 `gh-pages`에 같이 푸시합니다. 이 문서는 Tippy Tap만 다룹니다.
 
@@ -34,7 +35,7 @@
 
 지켜야 할 것:
 
-- **푸시할 때마다 `sw.js`의 `VERSION`을 올린다** (`tippytap-v18` → `tippytap-v19`). 안 올리면 설치된 기기가 새 버전을 받지 않는다.
+- **푸시할 때마다 `sw.js`의 `VERSION`을 올린다** (`tippytap-v19` → `tippytap-v20`). 안 올리면 설치된 기기가 새 버전을 받지 않는다.
 - 설치된 앱은 인터넷이 켜진 상태에서 한 번 열고, 닫았다가 다시 열어야 새 화면이 보인다. 사용자에게 "무엇이 보이면 새 버전인지"를 같이 알려준다.
 - 사용자는 한국어로 대화하고 주로 휴대폰에서 읽는다. 답은 짧게, 결과부터.
 - 아이 이름 같은 개인정보는 공개 리포에 넣지 않는다.
@@ -66,6 +67,13 @@
 | `Main loop` | `requestAnimationFrame` 루프 |
 
 상태 흐름(`G.state`): `menu` → `pick`(캐릭터 고르기) → `ready`(스테이지 시작 화면) → `play` ↔ `dead` → `clear` → `ready` …, 그리고 `pause`, `shop`.
+
+## Move my game (기록 옮기기)
+
+- 시작 화면의 **Move my game** 버튼(`#bMove`) → 화면 `#move`. `mvCode()`가 이 기기의 플레이어 목록 전체(`{cur,list}`)를 `TT1:` + base64(UTF-8 JSON) 코드로 만듭니다. 플레이어 3명 정도면 400~1000자.
+- **Copy my save code**: 클립보드에 복사(안 되면 글상자를 선택). **Load save**: 붙여 넣은 코드를 읽어 같은 id의 플레이어는 덮어쓰고, 없는 플레이어는 추가하고, 이 기기에 원래 있던 다른 플레이어는 그대로 둡니다. 앞뒤 공백·줄바꿈은 무시합니다.
+- github.io 주소에서는 **Open the new game with my save** 링크도 보입니다(`NEW_HOME` + `#save=코드`). 새 주소를 `#save=`로 열면 Move 화면이 코드가 채워진 채로 뜨고, Load save를 누르면 주소의 `#save=` 부분을 지웁니다.
+- 아이폰에서 홈 화면에 설치한 앱은 Safari와 저장 공간이 따로일 수 있습니다. 그래서 링크보다 코드 복사·붙여넣기를 기본으로 안내합니다.
 
 ## 최고 스테이지로 돌아가기와 처음부터 다시 하기
 
@@ -255,6 +263,8 @@
 | `7507176` | 스테이지를 깨면 캐릭터가 빙글 돌며 점프하는 환호 동작 |
 | `2fdf0b8` | 환호 동작을 한 번 점프, 한 바퀴로 줄임 |
 | `3b390e3` | 스테이지 트위스트 6종(13스테이지부터), 숨은 보석, 보석으로 여는 캐릭터 3종, 클리어 별 |
+| `239b9de` | Vercel 배포 기록 (문서만) |
+| (이 다음 커밋) | Move my game: 저장을 코드로 복사해 다른 주소로 옮기기 |
 
 ## 사용자에게 제안했지만 아직 정해지지 않은 것
 

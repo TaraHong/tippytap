@@ -75,6 +75,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 #stats{font-size:20px;font-weight:800;line-height:1.7;margin:6px 0}
 #stats b{color:#ffe66d}
 #hi{font-size:22px;font-weight:900;color:#ffe66d;margin:2px 0 0;min-height:0}
+#mvTx{pointer-events:auto;-webkit-user-select:text;user-select:text;font:13px/1.3 monospace;color:#2b2a5a;background:#fff;border:4px solid #ffb938;border-radius:18px;padding:8px 10px;width:min(420px,86vw);margin:8px 0 4px;outline:none;resize:none;text-shadow:none}
 #nmIn{pointer-events:auto;-webkit-user-select:text;user-select:text;font:inherit;font-weight:900;font-size:26px;text-align:center;color:#2b2a5a;background:#fff;border:4px solid #ffb938;border-radius:22px;padding:12px 16px;width:min(320px,86vw);margin:10px 0 4px;outline:none;text-shadow:none}
 .it.me{background:#fff3c4;box-shadow:0 0 0 3px #ffb938}
 .it.mine{background:#fffbe6}
@@ -138,6 +139,7 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <button class="btn" id="bPlay">Play</button>
   <div class="row"><button class="btn alt" id="bCont" style="display:none">Continue</button><button class="btn alt" id="bBest" style="display:none"></button></div>
   <div class="row" style="margin-top:4px"><button class="btn alt" id="bLead">Leaderboard</button><button class="btn alt" id="bWho">Add Player</button></div>
+  <button class="btn alt" id="bMove" style="font-size:16px;padding:8px 18px">Move my game</button>
   <p style="font-size:14px;opacity:.85;margin-top:16px">Left circle: move &nbsp;·&nbsp; Right circle: jump<br>Tap your coins to open the Shop. Best with headphones!</p>
 </div>
 <div id="pause" class="ov sh">
@@ -183,6 +185,16 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <p id="rdR" style="font-size:14px;margin:0;color:#ffc4dd"></p>
   <button class="btn" id="bGo">GO!</button>
   <div class="row"><button class="btn alt" id="bShop2">Shop</button><button class="btn alt" id="bBud">Change Buddy</button></div>
+</div>
+<div id="move" class="ov sh">
+  <h2>Move my game</h2>
+  <p style="max-width:440px;margin:0 0 6px">On the <b>old</b> game: tap <b>Copy my save code</b>.<br>On the <b>new</b> game: paste it below and tap <b>Load save</b>.</p>
+  <button class="btn" id="bMvCopy">Copy my save code</button>
+  <a id="mvLink" class="btn alt" style="display:none;text-decoration:none" target="_blank" rel="noopener">Open the new game with my save</a>
+  <textarea id="mvTx" rows="3" spellcheck="false" autocomplete="off" placeholder="Paste a save code here"></textarea>
+  <button class="btn alt" id="bMvLoad">Load save</button>
+  <p id="mvMsg" style="font-size:15px;font-weight:900;margin:4px 0;max-width:440px"></p>
+  <button class="btn alt" id="bMvX">Back</button>
 </div>
 <div id="name" class="ov sh">
   <h2>What's your name?</h2>
@@ -714,6 +726,25 @@ function refreshStart(){const p=me(),s=load(),b=$('bCont');$('hi').textContent=p
   if(s){b.style.display='';b.textContent='Continue \u00B7 Stage '+s.s;$('bPlay').textContent='New Game';}else{b.style.display='none';$('bPlay').textContent='Play';}
   {const e=$('bBest'),n=p?p.best||1:1;if(s&&n>s.s){e.style.display='';e.textContent='Go to Stage '+n+' (my best)';}else e.style.display='none';}
   $('bWho').textContent=p?'Switch Player':'Add Player';}
+/* Move my game: the whole player list (every player on this device, with stages, coins, gems and items) becomes one text code.
+   Saves live in localStorage, which belongs to one web address, so moving to a new address needs this. Loading a code adds its players,
+   replacing any with the same id, and keeps the other players already here. */
+const NEW_HOME='https://tippytap-beta.vercel.app/';
+function mvCode(){return 'TT1:'+btoa(unescape(encodeURIComponent(JSON.stringify({cur:PL.cur,list:PL.list}))));}
+function mvRead(c){c=String(c||'').replace(/\s+/g,'');const i=c.indexOf('TT1:');if(i<0)return null;try{const v=JSON.parse(decodeURIComponent(escape(atob(c.slice(i+4)))));
+  if(!v||!Array.isArray(v.list)||!v.list.length||!v.list.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'))return null;return v;}catch(e){return null;}}
+function showMove(code){const m=$('mvMsg'),l=$('mvLink');m.textContent='';$('mvTx').value=code||'';
+  if(PL.list.length&&location.hostname.endsWith('github.io')){l.style.display='';l.href=NEW_HOME+'#save='+mvCode();}else l.style.display='none';
+  if(code)m.textContent='A save code is ready. Tap Load save!';show('move');}
+function mvCopy(){const m=$('mvMsg'),t=$('mvTx');if(!PL.list.length){m.textContent='There is no saved game on this device yet.';return;}
+  t.value=mvCode();const ok=()=>{m.textContent='Copied! Now open the new game and paste it there.';};
+  const sel=()=>{try{t.focus();t.select();document.execCommand('copy');ok();}catch(e){m.textContent='Press and hold the code to copy it.';}};
+  try{navigator.clipboard.writeText(t.value).then(ok,sel);}catch(e){sel();}}
+function mvLoad(){const m=$('mvMsg'),v=mvRead($('mvTx').value);if(!v){m.textContent='That code does not look right. Copy it again from the old game.';return;}
+  for(const p of v.list){const i=PL.list.findIndex(q=>q.id===p.id);if(i>=0)PL.list[i]=p;else PL.list.push(p);}
+  PL.cur=v.list.some(p=>p.id===v.cur)?v.cur:v.list[0].id;plSave();usePlayer(PL.cur);const p=me();
+  m.textContent='Welcome back, '+p.name+'! Stage '+(p.s||1)+' · '+(p.coins||0)+' coins';SFX.clear();try{history.replaceState(null,'',location.pathname);}catch(e){}
+  setTimeout(()=>{if($('move').classList.contains('on'))show('start');},1800);}
 /* Starting over wipes the stage and the coins, so it asks first. The best stage is never lost: the start screen and the pause menu offer a jump back to it. */
 function ask(from,yes){G.askFrom=from;G.askYes=yes;const n=G.best;$('askT').textContent='You will go back to Stage 1 and your coins go back to 0.'+(n>1?' Your best stage ('+n+') stays saved. You can jump back to it from the start screen or the pause menu.':'');show('ask');}
 let nameCb=null;
@@ -1285,7 +1316,9 @@ $('bWho').addEventListener('click',()=>{if(PL.list.length)showWho();else showNam
 $('bWhoNew').addEventListener('click',()=>showName(null));$('bWhoX').addEventListener('click',()=>show('start'));
 $('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventListener('click',()=>showLead('pause'));$('bLead3').addEventListener('click',()=>showLead('clear'));
 $('bLeadX').addEventListener('click',()=>show(G.lbFrom||'start'));
+$('bMove').addEventListener('click',()=>showMove(''));$('bMvCopy').addEventListener('click',mvCopy);$('bMvLoad').addEventListener('click',()=>{initAudio();mvLoad();});$('bMvX').addEventListener('click',()=>show('start'));
 plLoad();if(me())usePlayer(PL.cur);else refreshStart();
+{const h=location.hash;if(h.indexOf('#save=')===0)showMove(decodeURIComponent(h.slice(6)));}
 if(PL.list.length)setTimeout(()=>lbSync(),1500);
 
 /* ====================== Main loop ====================== */

@@ -18,6 +18,8 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-20
+- **새 주소**: https://tippytap-beta.vercel.app 에서도 할 수 있습니다.
+- **Move my game**: 시작 화면 버튼으로 기록을 코드로 복사해 다른 주소나 기기로 옮길 수 있습니다.
 - **스테이지 트위스트** (13스테이지부터): Coin Rush(코인 가득), Moon Jump(높이 뛰기), Night Lights(어두운 길을 밟아서 밝히기), Slippy Slide(미끄러운 바닥), Windy Day(옆바람). 10스테이지마다 **Golden Stage**: 금색 길, King Grumbles, 보너스 3배.
 - **숨은 보석**: 스테이지마다 높이 떠 있는 보석 하나. 모으면 새 캐릭터 **Foxy**(5개), **Uni**(15개), **Robo**(30개)를 고를 수 있습니다. 이미 깬 스테이지 4개마다 보석 1개를 선물로 받습니다.
 - **클리어 별**: 클리어, 안 죽고 클리어, 보석 찾기로 별 3개.
