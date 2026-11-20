@@ -109,9 +109,24 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 .it button.eq{background:linear-gradient(180deg,#b9f6d0,#5fd08f);color:#0d3b22;box-shadow:0 3px 0 rgba(20,100,50,.5)}
 .it button.on{background:linear-gradient(180deg,#fff,#dfe6ff);color:#2b2a5a;box-shadow:0 3px 0 rgba(60,60,120,.4)}
 .it button.no{background:#d9d9e3;color:#77778a;box-shadow:none}
+.tabs{display:flex;gap:6px;width:min(520px,100%);margin-top:8px}
+.tab{pointer-events:auto;flex:1;min-width:0;font:inherit;font-weight:900;font-size:13px;color:#fff;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:5px 2px 6px;display:flex;flex-direction:column;align-items:center;position:relative}
+.tab b{font-size:24px;line-height:1.15}
+.tab.sel{background:#ffe98a;color:#2b2a5a;border-color:#fff;box-shadow:0 0 0 3px #ff9f43;text-shadow:none}
+.tab i{position:absolute;top:-6px;right:-4px;font-style:normal;font-size:11px;line-height:18px;min-width:18px;border-radius:9px;background:#ff5d8f;color:#fff;text-shadow:none}
+#shop .list{height:52vh}
+.cap{font-size:13px;font-weight:800;opacity:.92;margin:6px 0 0;min-height:17px}
+.list.grid{display:grid;grid-template-columns:repeat(2,1fr);align-content:start}
+.it.card{flex-direction:column;text-align:center;gap:3px;padding:8px 8px 9px}
+.it.card>b{font-size:40px;width:auto;line-height:1.1}
+.it.card div{flex:none}.it.card div span{display:block;min-height:2.5em}
+.it.card button{width:100%;min-width:0;margin-top:3px}
+.it.me>b{animation:pw 1.1s ease-in-out infinite}
+@keyframes pw{50%{transform:translateY(-3px) rotate(-6deg)}}
+@media (min-width:680px){#shop .tabs,#shop .list{width:min(700px,100%)}.list.grid{grid-template-columns:repeat(3,1fr)}#shop .list:not(.grid){display:grid;grid-template-columns:repeat(2,1fr);align-content:start}}
 .bal{display:flex;align-items:center;gap:8px;font-size:24px;font-weight:900}
 .bal i{width:26px;height:26px;border-radius:50%;display:block;background:radial-gradient(circle at 35% 30%,#fff7b0,#ffcf33 55%,#e69a00);border:2px solid #b87400}
-@media (max-height:430px){.ov h2{font-size:26px;margin:0}.chip b{font-size:22px}.list{max-height:46vh}.ov h1{font-size:34px}.keys{display:none}.btn{margin-top:8px;padding:10px 22px}.ov p{font-size:14px;margin:3px 0}}
+@media (max-height:430px){.ov h2{font-size:26px;margin:0}.chip b{font-size:22px}.list{max-height:46vh}#shop{padding:10px 24px}#shop .list{height:44vh;max-height:44vh;margin:4px 0}#shop .btn{margin-top:4px;padding:8px 22px}.tabs{margin-top:3px}.tab{flex-direction:row;justify-content:center;gap:5px;padding:3px 2px}.tab b{font-size:17px}.cap{margin:2px 0 0;font-size:12px}.it.card>b{font-size:30px}.ov h1{font-size:34px}.keys{display:none}.btn{margin-top:8px;padding:10px 22px}.ov p{font-size:14px;margin:3px 0}}
 </style>
 </head>
 <body>
@@ -216,6 +231,8 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 <div id="shop" class="ov sh">
   <h2>Shop</h2>
   <div class="bal"><i></i><span id="shopC">0</span></div>
+  <div id="shopT" class="tabs"></div>
+  <div id="shopCap" class="cap"></div>
   <div id="shopL" class="list"></div>
   <button class="btn alt" id="bShopX">Back</button>
 </div>
@@ -703,12 +720,23 @@ const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],[
    Gear with st lasts that many stages, counting the one it is bought in: G.gs[id] is how many are left, one comes off at every stage clear, and at 0 it is gone and can be bought again. */
 const GEAR=[
  {id:'crown',name:'Royal Crown',desc:'A shiny golden crown that sparkles',cost:500,ic:'\uD83D\uDC51'},
- {id:'chick',name:'Baby Chick',desc:'A little chick follows you. +1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC25'},
+ {id:'chick',name:'Baby Chick',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC25',pet:1},
+ {id:'ham',name:'Tiny Hamster',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC39',pet:1},
+ {id:'turtle',name:'Little Turtle',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC22',pet:1},
+ {id:'kitten',name:'Fluffy Kitten',desc:'+1 extra coin on every new tile',cost:900,ic:'\uD83D\uDC08',pet:1},
+ {id:'puppy',name:'Happy Puppy',desc:'+1 extra coin on every new tile',cost:900,ic:'\uD83D\uDC36',pet:1},
+ {id:'pony',name:'Magic Unicorn',desc:'Sparkles! +2 extra coins on every new tile',cost:2000,ic:'\uD83E\uDD84',pet:2},
  {id:'balloon',name:'Floaty Balloon',desc:'For 3 stages: you fall slowly, so jumps go farther',cost:800,ic:'\uD83C\uDF88',st:3},
  {id:'wings',name:'Butterfly Wings',desc:'For 3 stages: tap JUMP again in the air for a second jump',cost:1000,ic:'\uD83E\uDD8B',st:3}
 ];
 const CRY={fox:.9,uni:1.2,bot:1.2,frog:.74,kid:1.16,girl:1.18,dino:.86,cat:.86,pen:.94};   // how high the crown sits on each buddy (bunny: .88)
 function wear(id){return G.gon.indexOf(id)>=0;}
+/* Pets are gear with pet:n (n = extra coins on every new tile). Only one pet is out at a time, so putting one on sends the others home. */
+function petOn(){for(const g of GEAR)if(g.pet&&G.gon.indexOf(g.id)>=0)return g;return null;}
+function gearOn(g){if(g.pet)for(const o of GEAR)if(o.pet){const i=G.gon.indexOf(o.id);if(i>=0)G.gon.splice(i,1);}
+  if(G.gon.indexOf(g.id)<0)G.gon.push(g.id);
+  if(g.pet&&G.P){const P=G.P;G.pet.x=P.x-Math.sin(P.face)*.95;G.pet.z=P.z+Math.cos(P.face)*.95;G.pet.y=P.y;}}
+function gearTog(g){const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);else gearOn(g);}
 function tr(){for(const t of TR)if(t.id===G.eq)return t;return null;}
 /* Players: every name gets its own progress and records. Stored on this device only. */
 const PL={cur:null,list:[],legacy:null};
@@ -718,7 +746,7 @@ function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cu
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
 function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.gs=G.gs;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.gem=G.gems;p.gmS=G.gemS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{G.gems=p.gem=Math.floor(((p.best||1)-1)/4);G.gift=G.gems;}G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};{const k=petOn();if(k)G.gon=G.gon.filter(i=>i===k.id||!GEAR.some(g=>g.pet&&g.id===i));}for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{G.gems=p.gem=Math.floor(((p.best||1)-1)/4);G.gift=G.gems;}G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -829,7 +857,7 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
   if(!G.own.length)box.innerHTML='<p style="font-size:14px;margin:0">No trails yet. Buy one in the Shop!</p>';
   else{for(const g of GEAR){if(G.own.indexOf(g.id)<0)continue;const b=document.createElement('button');b.className='chip'+(wear(g.id)?' sel':'');
     b.innerHTML='<b>'+g.ic+'</b>'+g.name.split(' ')[1]+(g.st?' \u00B7 '+G.gs[g.id]:'');
-    b.addEventListener('click',()=>{const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);else G.gon.push(g.id);SFX.keyUp();save();showReady();});box.appendChild(b);}}
+    b.addEventListener('click',()=>{gearTog(g);SFX.keyUp();save();showReady();});box.appendChild(b);}}
   for(const t of TR){if(G.own.indexOf(t.id)<0)continue;const b=document.createElement('button');b.className='chip'+(G.eq===t.id?' sel':'');
     b.innerHTML='<b>'+t.ic+'</b>'+t.name.replace(' Trail','');
     b.addEventListener('click',()=>{G.eq=G.eq===t.id?null:t.id;SFX.keyUp();save();showReady();});box.appendChild(b);}
@@ -865,28 +893,36 @@ function updChaser(dt){const c=G.ch,P=G.P;if(!c.on||G.state!=='play')return;
   if(d<1.05&&P.inv<=0)die('caught');}
 function openShop(){if(G.state!=='play'&&G.state!=='ready')return;G.prev=G.state;G.state='shop';drawShop();show('shop');}
 function closeShop(){if(G.state!=='shop')return;if(G.prev==='ready')showReady();else{show(null);G.state='play';}}
-function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL');L.innerHTML='';
-  const row=(ic,name,desc,label,cls,fn)=>{const d=document.createElement('div');d.className='it';d.innerHTML='<b>'+ic+'</b><div><strong>'+name+'</strong><span>'+desc+'</span></div>';
+/* The Shop has four tabs. G.shopTab remembers the open one until the app is closed. */
+const SHOPT=[['boost','\u26A1','Boosts','Power-ups for tricky stages'],['trail','\u2728','Trails','Wear one trail at a time'],['gear','\uD83D\uDC51','Gear','Wear as many as you like'],['pet','\uD83D\uDC3E','Pets','One pet walks with you at a time']];
+function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL'),tab=G.shopTab||'boost',keep=L.dataset.tab===tab?L.scrollTop:0;L.innerHTML='';L.dataset.tab=tab;L.className='list'+(tab==='pet'?' grid':'');
+  {const T=$('shopT');T.innerHTML='';for(const q of SHOPT){const b=document.createElement('button');b.className='tab'+(q[0]===tab?' sel':'');b.innerHTML='<b>'+q[1]+'</b>'+q[2];
+      const n=q[0]==='trail'?TR.filter(t=>G.own.indexOf(t.id)>=0).length:q[0]==='boost'?0:GEAR.filter(g=>(q[0]==='pet')===!!g.pet&&G.own.indexOf(g.id)>=0).length;
+      if(n){const i=document.createElement('i');i.textContent=n;b.appendChild(i);}
+      b.addEventListener('click',()=>{if(G.shopTab===q[0])return;G.shopTab=q[0];SFX.keyUp();drawShop();});T.appendChild(b);
+      if(q[0]===tab)$('shopCap').textContent=q[3];}}
+  const row=(ic,name,desc,label,cls,fn,st)=>{const d=document.createElement('div');d.className='it'+(tab==='pet'?' card':'')+(st?' '+st:'');d.innerHTML='<b>'+ic+'</b><div><strong>'+name+'</strong><span>'+desc+'</span></div>';
     const b=document.createElement('button');b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',fn);d.appendChild(b);L.appendChild(d);};
-  const sc=100+40*G.stage;
+  if(tab==='boost'){const sc=100+40*G.stage;
   row('\u23ED\uFE0F','Skip Stage '+G.stage,'Jump straight to the next stage',G.coins>=sc?sc+' coins':'Need '+(sc-G.coins)+' more',G.coins>=sc?'':'no',()=>{
     if(G.coins<sc)return;G.coins-=sc;SFX.buy();prepStage(G.stage+1,0);showReady();});
   {const n=G.arm,can=G.coins>=ARM_COST;
     row(SHIELD,'Armor','Blocks 3 hits. Each one stays until it is used, even in the same stage. Falling still counts!'+(n?' ('+n+' ready)':''),can?ARM_COST+' coins':'Need '+(ARM_COST-G.coins)+' more',can?'':'no',()=>{
-      if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;if(G.prev==='play')SFX.armor();SFX.buy();hud();armHud();save();drawShop();});}
+      if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;if(G.prev==='play')SFX.armor();SFX.buy();hud();armHud();save();drawShop();},n?'mine':'');}
   {const n=G.rev+(G.revOn?1:0),can=G.coins>=REV_COST;
     row(HEART,'Instant Revive','For your next 2 stages: twice per stage, pop right back where you were instead of the checkpoint.'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?REV_COST+' coins':'Need '+(REV_COST-G.coins)+' more',can?'':'no',()=>{
-      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();});}
-  for(const t of TR){const own=G.own.indexOf(t.id)>=0,can=G.coins>=t.cost;
+      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();},n?'mine':'');}}
+  if(tab==='trail')for(const t of TR){const own=G.own.indexOf(t.id)>=0,can=G.coins>=t.cost;
     row(t.ic,t.name,t.desc,own?(G.eq===t.id?'Take off':'Equip'):(can?t.cost+' coins':'Need '+(t.cost-G.coins)+' more'),own?(G.eq===t.id?'on':'eq'):(can?'':'no'),()=>{
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
-      save();drawShop();});}
-  for(const g of GEAR){const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=G.coins>=g.cost;
-    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?'Take off':'Wear'):(can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
-      if(own){const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);else G.gon.push(g.id);SFX.keyUp();}
-      else{if(!can)return;G.coins-=g.cost;G.own.push(g.id);G.gon.push(g.id);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
-      save();drawShop();});}}
+      save();drawShop();},own?(G.eq===t.id?'me':'mine'):'');}
+  if(tab==='gear'||tab==='pet')for(const g of GEAR){if((tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=G.coins>=g.cost;
+    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
+      if(own){gearTog(g);SFX.keyUp();}
+      else{if(!can)return;G.coins-=g.cost;G.own.push(g.id);gearOn(g);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
+      save();drawShop();},own?(on?'me':'mine'):'');}
+  L.scrollTop=keep;}
 /* Treadmills: stand on one and the buddy runs in place. Every step banks +2 speed.
    Gold takes 20 steps a second and black 10, so ten seconds is 400 (gold) or 200 (black).
    Stepping off turns the bank into a 10-second boost: 100 speed = 10% faster. */
@@ -985,7 +1021,7 @@ function pressFx(t){const th=G.W.th.id,y=t.y+.1;
   else spawn(t.x,y,t.z,0,0,0,.45,.5,t.pcol,{ring:true,g:0,emis:.8});}
 function onTile(t,s,landed){const P=G.P;let fresh=false;
   if(!t.pressed){t.pressed=true;fresh=true;t.flash=1;t.deco=t.deco?2:0;s=Math.max(s,.9);pressFx(t);
-    if(G.state==='play'){const v=(t.kind==='boost'?3:1)+(wear('chick')?1:0);addCoins(v,t.x,t.y+.6,t.z,'+'+v,v>1?'c':'');}}
+    if(G.state==='play'){const v=(t.kind==='boost'?3:1)+(G.petK?G.petK.pet:0);addCoins(v,t.x,t.y+.6,t.z,'+'+v,v>1?'c':'');}}
   stepSnd(t,s,fresh);
   if(t.kind==='check'&&t.cp>G.cp){G.cp=t.cp;SFX.check();toast('Checkpoint saved!');save();
     for(let i=0;i<20;i++){const a=i/20*6.283;spawn(t.x+Math.cos(a)*1.6,t.y+.2,t.z+Math.sin(a)*1.6,0,rand(2,5),0,1,.14,[.5,1,.7],{g:1,emis:.8});}}
@@ -1052,7 +1088,8 @@ function update(dt){
       else{const sp=Math.hypot(P.vx,P.vz);P.stepD+=sp*dt;P.walk+=sp*dt*4.2;if(P.stepD>1.2){P.stepD=0;stepSnd(best,.42,false);}}
     }else{P.gr=false;P.ground=null;}
     trStep(dt,ctl);revTrack(dt);
-    if(wear('chick')){const q=G.pet,k=Math.min(1,dt*7);q.x+=(P.x-Math.sin(P.face)*.95-q.x)*k;q.z+=(P.z+Math.cos(P.face)*.95-q.z)*k;q.y+=(P.y-q.y)*Math.min(1,dt*10);}
+    G.petK=petOn();if(G.petK&&G.petK.pet>1&&Math.random()<dt*3)spawn(G.pet.x+rand(-.25,.25),G.pet.y+rand(.3,.8),G.pet.z+rand(-.25,.25),0,rand(.3,.9),0,.5,.08,[1,.8,.95],{g:0,emis:1});
+    if(G.petK){const q=G.pet,k=Math.min(1,dt*7);q.x+=(P.x-Math.sin(P.face)*.95-q.x)*k;q.z+=(P.z+Math.cos(P.face)*.95-q.z)*k;q.y+=(P.y-q.y)*Math.min(1,dt*10);}
     if(wear('crown')&&Math.random()<dt*2.5)spawn(P.x+rand(-.3,.3),P.y+rand(1,1.4),P.z+rand(-.3,.3),0,rand(.3,.9),0,.5,.09,[1,.95,.6],{g:0,emis:1});
     // squash spring
     P.sqv+=(-P.sq*160-P.sqv*14)*dt;P.sq=clamp(P.sq+P.sqv*dt,-.4,.4);
@@ -1177,10 +1214,31 @@ function drawChar(FX){const P=G.P,t=G.t,a=P.face,rx=Math.cos(a),rz=Math.sin(a),f
   if(wear('balloon')){const o=.46+Math.sin(t*2)*.05,X=P.x+rx*o-fx*.05,Z=P.z+rz*o-fz*.05,R=[.25,.85,.8];
     D(CUBE,X,by+1.12,Z,.025,1.1,.025,[1,1,1],.2);D(CONE,X,by+1.66,Z,.1,.1,.1,R,.3);D(SPH,X,by+2,Z,.5,.6,.5,R,.35);}
 }
-function drawPet(t){const q=G.pet,P=G.P,a=Math.atan2(P.x-q.x,q.z-P.z),fx=Math.sin(a),fz=-Math.cos(a),rx=Math.cos(a),rz=Math.sin(a),Y=[1,.88,.3];
-  const y=q.y+(Math.hypot(P.vx,P.vz)>.5?Math.abs(Math.sin(t*12))*.12:Math.abs(Math.sin(t*3))*.03);
+/* The pet that trots behind the buddy. Each one is 5 to 8 draws and only one is ever out.
+   p = ball, c = cone; (ro,uo,fo) = right / up / forward of the pet's own middle, like part() for the buddy. */
+function drawPet(t,kind){const q=G.pet,P=G.P,a=Math.atan2(P.x-q.x,q.z-P.z),fx=Math.sin(a),fz=-Math.cos(a),rx=Math.cos(a),rz=Math.sin(a);
+  const run=Math.hypot(P.vx,P.vz)>.5,slow=kind==='turtle';
+  const y=q.y+(run?Math.abs(Math.sin(t*(slow?7:12)))*(slow?.05:.12):Math.abs(Math.sin(t*3))*.03);
   const p=(ro,uo,fo,sx,sy,sz,c,e)=>D(SPH,q.x+rx*ro+fx*fo,y+uo,q.z+rz*ro+fz*fo,sx,sy,sz,c,e||0,1,-a,0,0);
-  p(0,.2,0,.4,.36,.42,Y,.2);p(0,.44,.1,.3,.28,.3,Y,.2);p(0,.42,.27,.12,.08,.12,[1,.55,.15]);p(-.08,.5,.22,.06,.07,.05,DK);p(.08,.5,.22,.06,.07,.05,DK);}
+  const c=(ro,uo,fo,sx,sy,sz,col,e)=>D(CONE,q.x+rx*ro+fx*fo,y+uo,q.z+rz*ro+fz*fo,sx,sy,sz,col,e||0,1,-a,0,0);
+  const eyes=(w,u,f,s)=>{p(-w,u,f,s,s*1.15,s*.8,DK);p(w,u,f,s,s*1.15,s*.8,DK);};
+  if(kind==='kitten'){const B=[1,.63,.28],wg=Math.sin(t*5)*.06;
+    p(0,.2,-.04,.36,.34,.46,B,.15);p(0,.45,.14,.34,.3,.3,B,.15);c(-.11,.63,.12,.12,.16,.1,B,.15);c(.11,.63,.12,.12,.16,.1,B,.15);
+    p(wg,.36,-.3,.09,.3,.09,[1,.8,.5],.15);p(0,.4,.28,.14,.1,.08,[1,1,1]);eyes(.08,.49,.27,.06);}
+  else if(kind==='puppy'){const B=[.72,.48,.28],E=[.42,.25,.14],wg=Math.sin(t*14)*.07;
+    p(0,.21,-.04,.38,.36,.5,B,.12);p(0,.47,.16,.34,.32,.32,B,.12);p(-.19,.44,.13,.1,.26,.16,E);p(.19,.44,.13,.1,.26,.16,E);
+    p(0,.41,.31,.18,.14,.14,[1,.9,.75]);p(0,.45,.39,.07,.06,.05,DK);p(wg,.38,-.3,.08,.2,.08,B,.12);eyes(.08,.53,.29,.06);}
+  else if(kind==='ham'){const B=[1,.78,.5];
+    p(0,.22,0,.48,.42,.5,B,.15);p(0,.16,.1,.4,.3,.36,[1,.97,.9],.1);p(-.15,.44,.02,.12,.12,.06,[1,.62,.68]);p(.15,.44,.02,.12,.12,.06,[1,.62,.68]);
+    p(0,.24,.27,.06,.05,.05,[1,.5,.6]);eyes(.09,.31,.23,.06);}
+  else if(kind==='turtle'){const S=[.2,.6,.32],H=[.62,.85,.42],st=run?Math.sin(t*7)*.05:0;
+    p(0,.2,-.02,.52,.3,.56,S,.12);p(0,.11,-.02,.56,.1,.6,[.95,.86,.5],.1);p(0,.25,.31,.2,.2,.22,H,.12);
+    p(-.25,.07,.14+st,.14,.1,.16,H);p(.25,.07,.14-st,.14,.1,.16,H);eyes(.06,.3,.4,.05);}
+  else if(kind==='pony'){const B=[1,1,1],M=[1,.6,.85];
+    p(0,.24,-.06,.36,.36,.52,B,.3);p(0,.52,.17,.28,.3,.34,B,.3);c(0,.76,.2,.07,.22,.07,GOLD,.7);
+    p(0,.56,0,.12,.3,.2,M,.35);p(0,.3,-.33,.12,.3,.12,[.62,.6,1],.35);eyes(.08,.56,.31,.055);}
+  else{const Y=[1,.88,.3];
+    p(0,.2,0,.4,.36,.42,Y,.2);p(0,.44,.1,.3,.28,.3,Y,.2);p(0,.42,.27,.12,.08,.12,[1,.55,.15]);p(-.08,.5,.22,.06,.07,.05,DK);p(.08,.5,.22,.06,.07,.05,DK);}}
 function render(){
   const P=G.P,W=G.W,th=W.th,C=G.cam,t=G.t;
   const asp=cv.width/cv.height,port=asp<1;
@@ -1255,7 +1313,7 @@ function render(){
     if(king){cp(0,1.5,-.1,.62,.2,.62,GOLD,.5);for(let i=-1;i<2;i++)cp(i*.22,1.68,-.1,.16,.26,.16,GOLD,.6);cp(0,1.56,.2,.12,.12,.08,[1,.3,.4],.6);}}
   // player
   if(G.state!=='dead'&&!(P.inv>0&&((t*14)|0)%2))drawChar(FX);
-  if(G.state!=='dead'&&wear('chick'))drawPet(t);
+  if(G.state!=='dead'&&G.petK)drawPet(t,G.petK.id);
   if(G.revOn&&G.state!=='dead')drawHearts(t);
   // ---- transparent pass
   gl.depthMask(false);
