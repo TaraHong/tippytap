@@ -18,6 +18,7 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-23
+- **Pet World**: 첫 화면의 세 번째 카드. Shop에서 산 펫들이 마당에 나와 있고, 한 마리를 골라 밥 주기, 공놀이, 목욕(손으로 문질러 거품 내기), 쓰다듬기를 합니다. 배부름·즐거움·깨끗함이 시간이 지나면 천천히 줄고, 셋 다 가득 채우면 하루 한 번 선물(코인, 가끔 보석)을 받습니다.
 - **Squish World**: 첫 화면에서 Tippy Tap Escape와 Squish World 중 고릅니다.
   - 말랑이 28종, 희귀도 7단계(Common → Mythic). 보석으로 미스터리 캡슐(Mini 2 / Super 5 / Mega 10)을 열면 랜덤으로 나오고, 비싼 캡슐일수록 희귀한 것이 잘 나옵니다. 처음 한 번은 무료 캡슐.
   - 내 말랑이를 3D로 360도 돌려 보고, 누르면 납작해지고 당기면 늘어납니다. 종류마다 다른 ASMR 소리가 납니다(젤, 젤리, 물구슬, 끈적임, 고운 모래, 비즈, 눈, 폼, 고무 9가지).

@@ -1,5 +1,5 @@
 // Tippy Tap Escape offline cache. Bump VERSION whenever you change the game files.
-const VERSION = 'tippytap-v25';
+const VERSION = 'tippytap-v26';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   // cache: 'reload' skips the browser's own HTTP cache, so a new version never stores a stale copy of the game
