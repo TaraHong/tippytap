@@ -124,6 +124,15 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
 .it.me>b{animation:pw 1.1s ease-in-out infinite}
 @keyframes pw{50%{transform:translateY(-3px) rotate(-6deg)}}
 @media (min-width:680px){#shop .tabs,#shop .list{width:min(700px,100%)}.list.grid{grid-template-columns:repeat(3,1fr)}#shop .list:not(.grid){display:grid;grid-template-columns:repeat(2,1fr);align-content:start}}
+#egg{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(20,16,60,.9);pointer-events:auto;text-align:center;color:#fff;font-weight:900;cursor:pointer}
+#egg.on{display:flex}
+#eggI{font-size:120px;line-height:1.15}
+#eggT{font-size:26px;margin:0}
+#eggS{font-size:14px;opacity:.8;min-height:18px}
+#egg.wob #eggI{animation:eggw .95s ease-in-out}
+#egg.out #eggI{animation:eggp .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes eggw{0%,100%{transform:rotate(0)}15%{transform:rotate(-14deg)}30%{transform:rotate(14deg)}45%{transform:rotate(-18deg)}60%{transform:rotate(18deg)}75%{transform:rotate(-22deg) scale(1.08)}90%{transform:rotate(22deg) scale(1.14)}}
+@keyframes eggp{0%{transform:scale(.2)}100%{transform:scale(1)}}
 .bal{display:flex;align-items:center;gap:8px;font-size:24px;font-weight:900}
 .bal i{width:26px;height:26px;border-radius:50%;display:block;background:radial-gradient(circle at 35% 30%,#fff7b0,#ffcf33 55%,#e69a00);border:2px solid #b87400}
 @media (max-height:430px){.ov h2{font-size:26px;margin:0}.chip b{font-size:22px}.list{max-height:46vh}#shop{padding:10px 24px}#shop .list{height:44vh;max-height:44vh;margin:4px 0}#shop .btn{margin-top:4px;padding:8px 22px}.tabs{margin-top:3px}.tab{flex-direction:row;justify-content:center;gap:5px;padding:3px 2px}.tab b{font-size:17px}.cap{margin:2px 0 0;font-size:12px}.it.card>b{font-size:30px}.ov h1{font-size:34px}.keys{display:none}.btn{margin-top:8px;padding:10px 22px}.ov p{font-size:14px;margin:3px 0}}
@@ -228,9 +237,10 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   <div id="leadL" class="list"></div>
   <button class="btn alt" id="bLeadX">Back</button>
 </div>
+<div id="egg"><b id="eggI"></b><p id="eggT"></p><span id="eggS"></span></div>
 <div id="shop" class="ov sh">
   <h2>Shop</h2>
-  <div class="bal"><i></i><span id="shopC">0</span></div>
+  <div class="bal"><i></i><span id="shopC">0</span><span id="shopG" style="margin-left:14px"></span></div>
   <div id="shopT" class="tabs"></div>
   <div id="shopCap" class="cap"></div>
   <div id="shopL" class="list"></div>
@@ -590,6 +600,8 @@ const TWS={rush:{ic:'\uD83E\uDE99',n:'Coin Rush',d:'Coins everywhere! Grab them 
 function twRaw(n){if(n<13)return'';const r=rng(n*131+5),a=r(),b=r();return a<.22?'':TWL[(b*5)|0];}
 function twistOf(n){if(n>=10&&n%10===0)return'gold';let t=twRaw(n);if(t&&t===twRaw(n-1))t=TWL[(TWL.indexOf(t)+1+n%3)%5];return t;}
 const GEM='\uD83D\uDC8E';
+/* G.gems counts every gem ever found or bought (buddies unlock on it and never lock again); G.gsp is how many were spent. gb() is what is left to spend. */
+function gb(){return G.gems-G.gsp;}
 function build(stage){
   const th=THEMES[(stage-1)%THEMES.length],R=rng(stage*7919+13),d=Math.min(1.25,(stage-1)/8);
   const W={tiles:[],haz:[],coins:[],zones:[],cps:[],decor:[],th,d,finish:null,endZ:0,total:0};
@@ -679,7 +691,7 @@ function build(stage){
         if(c<bd){bd=c;b=t;}}
       if(b)W.drinks.push({x:b.x,y:b.y+1,z:b.z,got:false,ph:k*1.3});}}
   /* twist dressing and the stage's one hidden gem. Still no R() calls. */
-  {const tw=W.tw=twistOf(stage),pl=W.tiles.filter(t=>t.kind==='tile'&&!t.mv);
+  {const tw=W.tw=(G.mg&&G.mg.s===stage?G.mg.tw:'')||twistOf(stage),pl=W.tiles.filter(t=>t.kind==='tile'&&!t.mv);
     if(tw==='gold')for(const t of pl){const j=.9+(t.note%5)*.025;t.col=[j,.8*j,.26*j];}
     else if(tw==='ice')for(const t of pl){t.col=[t.col[0]*.4+.47,t.col[1]*.4+.56,t.col[2]*.4+.6];}
     else if(tw==='rush')for(const t of pl){if(t.note%2||W.coins.some(q=>Math.abs(q.x-t.x)<.8&&Math.abs(q.z-t.z)<.8))continue;W.coins.push({x:t.x,y:t.y+.9,z:t.z,got:false,ph:t.note,x2:true});}
@@ -702,32 +714,35 @@ function buildBonus(stage,th){const W={tiles:[],haz:[],coins:[],zones:[],cps:[],
   W.total=-(z0-BN_ROWS*U);W.endZ=-W.total;return W;}
 
 /* ====================== Game state ====================== */
-const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,bn:null,bnGo:false,bonusS:0,gems:0,gemS:0,gift:0,wd:{t:4,dir:1,on:0},gon:[],gs:{},pet:{x:0,y:0,z:0},chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
+const G={state:'menu',stage:1,coins:0,best:1,streak:0,cp:0,t:0,W:null,parts:[],combo:0,comboT:-9,bonks:0,stageCoins:0,eq:null,own:[],arm:0,rev:0,revS:0,revOn:false,revLeft:0,revH:[],revT:0,deadKind:'',boost:0,boostT:0,drT:0,bn:null,bnGo:false,bonusS:0,gems:0,gsp:0,mg:null,bnKey:false,gemS:0,gift:0,wd:{t:4,dir:1,on:0},gon:[],gs:{},pet:{x:0,y:0,z:0},chr:'bunny',earned:0,zoom:1,prev:'play',ambT:3,deadT:0,
   ch:{on:false,act:false,delay:0,path:[],i:0,x:0,y:0,z:0,near:0,thT:0,sc:0,face:0},
   P:{x:0,y:0,z:0,vx:0,vy:0,vz:0,bz:0,bank:0,stepF:0,offT:0,onTr:false,gr:false,ground:null,coy:0,face:0,sq:0,sqv:0,walk:0,stepD:0,inv:0,lastGY:0},cam:{x:0,y:0,z:0}};
 window.__game=G;
 const inp={x:0,y:0,jump:false,jt:-9,k:{}};
 const TR=[
- {id:'spark',name:'Sparkle Trail',desc:'Pretty sparkles follow you',cost:30,ic:'\u2728'},
- {id:'zoom',name:'Zoom Trail',desc:'Run 15% faster',cost:120,ic:'\u26A1',spd:1.15},
- {id:'rain',name:'Rainbow Trail',desc:'Your buddy glows in rainbow colors',cost:200,ic:'\uD83C\uDF08',fancy:1},
- {id:'mag',name:'Magnet Trail',desc:'Pulls coins to you, +1 extra per coin',cost:250,ic:'\uD83E\uDDF2',mag:1},
- {id:'star',name:'Star Power',desc:'Fast + rainbow + magnet, all in one!',cost:800,ic:'\uD83C\uDF1F',spd:1.15,fancy:1,mag:1}
+ {id:'spark',name:'Sparkle Trail',desc:'Pretty sparkles follow you',cost:50,ic:'\u2728'},
+ {id:'zoom',name:'Zoom Trail',desc:'Run 15% faster',cost:200,ic:'\u26A1',spd:1.15},
+ {id:'rain',name:'Rainbow Trail',desc:'Your buddy glows in rainbow colors',cost:300,ic:'\uD83C\uDF08',fancy:1},
+ {id:'mag',name:'Magnet Trail',desc:'Pulls coins to you, +1 extra per coin',cost:400,ic:'\uD83E\uDDF2',mag:1},
+ {id:'star',name:'Star Power',desc:'Fast + rainbow + magnet, all in one!',cost:1200,ic:'\uD83C\uDF1F',spd:1.15,fancy:1,mag:1}
 ];
 /* a fourth entry is how many gems the buddy needs before it can be picked */
 const CHARS=[['bunny','Bunny','\uD83D\uDC30'],['frog','Froggy','\uD83D\uDC38'],['kid','Kiddo','\uD83D\uDC66'],['girl','Missy','\uD83D\uDC67'],['dino','Dino','\uD83E\uDD96'],['cat','Kitty','\uD83D\uDC31'],['pen','Pengu','\uD83D\uDC27'],['fox','Foxy','\uD83E\uDD8A',5],['uni','Uni','\uD83E\uDD84',15],['bot','Robo','\uD83E\uDD16',30]];
 /* Gear: things the buddy wears. Unlike trails, any number can be on at once (G.gon lists the ones that are on; bought ones sit in G.own next to the trails).
    Gear with st lasts that many stages, counting the one it is bought in: G.gs[id] is how many are left, one comes off at every stage clear, and at 0 it is gone and can be bought again. */
 const GEAR=[
- {id:'crown',name:'Royal Crown',desc:'A shiny golden crown that sparkles',cost:500,ic:'\uD83D\uDC51'},
- {id:'chick',name:'Baby Chick',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC25',pet:1},
- {id:'ham',name:'Tiny Hamster',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC39',pet:1},
- {id:'turtle',name:'Little Turtle',desc:'+1 extra coin on every new tile',cost:700,ic:'\uD83D\uDC22',pet:1},
- {id:'kitten',name:'Fluffy Kitten',desc:'+1 extra coin on every new tile',cost:900,ic:'\uD83D\uDC08',pet:1},
- {id:'puppy',name:'Happy Puppy',desc:'+1 extra coin on every new tile',cost:900,ic:'\uD83D\uDC36',pet:1},
- {id:'pony',name:'Magic Unicorn',desc:'Sparkles! +2 extra coins on every new tile',cost:2000,ic:'\uD83E\uDD84',pet:2},
- {id:'balloon',name:'Floaty Balloon',desc:'For 3 stages: you fall slowly, so jumps go farther',cost:800,ic:'\uD83C\uDF88',st:3},
- {id:'wings',name:'Butterfly Wings',desc:'For 3 stages: tap JUMP again in the air for a second jump',cost:1000,ic:'\uD83E\uDD8B',st:3}
+ {id:'crown',name:'Royal Crown',desc:'A shiny golden crown that sparkles',cost:800,ic:'\uD83D\uDC51'},
+ {id:'chick',name:'Baby Chick',desc:'+1 extra coin on every new tile',cost:1000,ic:'\uD83D\uDC25',pet:1},
+ {id:'ham',name:'Tiny Hamster',desc:'+1 extra coin on every new tile',cost:1000,ic:'\uD83D\uDC39',pet:1},
+ {id:'turtle',name:'Little Turtle',desc:'+1 extra coin on every new tile',cost:1000,ic:'\uD83D\uDC22',pet:1},
+ {id:'kitten',name:'Fluffy Kitten',desc:'+1 extra coin on every new tile',cost:1400,ic:'\uD83D\uDC08',pet:1},
+ {id:'puppy',name:'Happy Puppy',desc:'+1 extra coin on every new tile',cost:1400,ic:'\uD83D\uDC36',pet:1},
+ {id:'pony',name:'Magic Unicorn',desc:'Sparkles! +2 extra coins on every new tile',cost:3000,ic:'\uD83E\uDD84',pet:2},
+ {id:'dragon',name:'Baby Dragon',desc:'Rare! +3 extra coins on every new tile',gem:15,ic:'\uD83D\uDC32',pet:3},
+ {id:'halo',name:'Shiny Halo',desc:'A glowing ring of light floats over your head',gem:6,ic:'\uD83D\uDE07'},
+ {id:'cape',name:'Super Cape',desc:'A red hero cape that flaps when you jump',gem:10,ic:'\uD83E\uDDB8'},
+ {id:'balloon',name:'Floaty Balloon',desc:'For 3 stages: you fall slowly, so jumps go farther',cost:1200,ic:'\uD83C\uDF88',st:3},
+ {id:'wings',name:'Butterfly Wings',desc:'For 3 stages: tap JUMP again in the air for a second jump',cost:1500,ic:'\uD83E\uDD8B',st:3}
 ];
 const CRY={fox:.9,uni:1.2,bot:1.2,frog:.74,kid:1.16,girl:1.18,dino:.86,cat:.86,pen:.94};   // how high the crown sits on each buddy (bunny: .88)
 function wear(id){return G.gon.indexOf(id)>=0;}
@@ -745,8 +760,8 @@ function plLoad(){try{const v=JSON.parse(localStorage.getItem('tippytap_players'
 function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cur:PL.cur,list:PL.list}));}catch(e){}}
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
-function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.gs=G.gs;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.gem=G.gems;p.gmS=G.gemS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};{const k=petOn();if(k)G.gon=G.gon.filter(i=>i===k.id||!GEAR.some(g=>g.pet&&g.id===i));}for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{G.gems=p.gem=Math.floor(((p.best||1)-1)/4);G.gift=G.gems;}G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
+function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.gs=G.gs;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.gem=G.gems;p.gsp=G.gsp;p.mg=G.mg;p.gmS=G.gemS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};{const k=petOn();if(k)G.gon=G.gon.filter(i=>i===k.id||!GEAR.some(g=>g.pet&&g.id===i));}for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{G.gems=p.gem=Math.floor(((p.best||1)-1)/4);G.gift=G.gems;}G.gsp=Math.min(G.gems,p.gsp||0);G.mg=p.mg&&typeof p.mg==='object'&&TWS[p.mg.tw]?p.mg:null;G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -840,7 +855,7 @@ function applyTheme(th){const r=document.documentElement.style;r.setProperty('--
 function placeAt(t){const P=G.P;P.x=t.x;P.z=t.z;P.y=t.y+.05;G.revH.length=0;P.vx=P.vy=P.vz=P.bz=0;P.bank=0;P.stepF=0;P.onTr=false;G.boostT=0;G.drT=0;trHud();P.gr=false;P.ground=null;P.lastGY=t.y;P.inv=1.2;P.face=0;P.dj=false;G.pet.x=P.x;G.pet.y=P.y;G.pet.z=P.z+.9;
   G.cam.x=P.x;G.cam.y=P.y;G.cam.z=P.z;G.wd.on=0;G.wd.t=Math.max(G.wd.t,2.5);}
 function show(id){document.querySelectorAll('.ov').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');}
-function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);G.bn=null;G.bnGo=false;const W=G.W=build(n);if(W.portal&&G.bonusS===n)W.bonusUsed=true;if(W.gem&&G.gemS===n)W.gem.got=true;bnHud();cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
+function prepStage(n,cpi){if(G.mg&&G.mg.s!==n)G.mg=null;G.stage=n;G.best=Math.max(G.best,n);G.bn=null;G.bnGo=false;const W=G.W=build(n);if(W.portal&&G.bonusS===n)W.bonusUsed=true;if(W.gem&&G.gemS===n)W.gem.got=true;bnHud();cpi=Math.min(cpi||0,W.cps.length-1);G.cp=cpi;
   for(let i=0;i<=cpi;i++)W.cps[i].pressed=true;
   const c=W.cps[cpi];for(const z of W.zones)if(z.z1>c.z)z.done=true;
   G.parts.length=0;G.bonks=0;G.stageCoins=0;G.streak=0;G.ch.on=false;G.ch.act=false;$('warn').style.opacity=0;strk();
@@ -852,7 +867,7 @@ function prepStage(n,cpi){G.stage=n;G.best=Math.max(G.best,n);G.bn=null;G.bnGo=f
 function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rdT').textContent=G.W.th.name;
   $('rdW').textContent=G.stage>=4?'Watch out! Grumbles the grumpy cloud is chasing you. Keep moving!':(G.stage>=2?'Look for the blue zoom lanes. They make you super fast!':'Step on every key for +1 coin!');
   {const tw=G.W.tw,e=$('rdTw');e.style.display=tw?'':'none';if(tw)e.innerHTML='<b>'+TWS[tw].ic+' '+TWS[tw].n+'</b><br>'+TWS[tw].d;
-    $('rdG').textContent=G.gift?'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.':GEM+' '+G.gems+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
+    $('rdG').textContent=G.gift?'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.':GEM+' '+gb()+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
   const box=$('rdTr');box.innerHTML='';
   if(!G.own.length)box.innerHTML='<p style="font-size:14px;margin:0">No trails yet. Buy one in the Shop!</p>';
   else{for(const g of GEAR){if(G.own.indexOf(g.id)<0)continue;const b=document.createElement('button');b.className='chip'+(wear(g.id)?' sel':'');
@@ -866,7 +881,7 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
   {const n=G.rev+(G.revOn&&G.revS===G.stage?1:0);$('rdR').textContent=n?HEART+' Instant Revive ready for '+n+' stage'+(n>1?'s':''):'';}
   show('ready');}
 function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
-  $('pkG').textContent=GEM+' '+G.gems+' gems \u00B7 Find one in every stage to unlock new buddies!';
+  $('pkG').textContent=GEM+' '+G.gems+' gems found so far \u00B7 Find one in every stage to unlock new buddies!';
   for(const c of CHARS){const lock=c[3]&&G.gems<c[3],b=document.createElement('button');b.className='chip'+(G.chr===c[0]?' sel':'');b.innerHTML='<b>'+(lock?'\uD83D\uDD12':c[2])+'</b>'+(lock?GEM+' '+c[3]:c[1]);if(lock)b.style.opacity=.75;
     b.addEventListener('click',()=>{if(lock){SFX.keyUp();$('pkG').textContent='Find '+(c[3]-G.gems)+' more gem'+(c[3]-G.gems>1?'s':'')+' to unlock '+c[1]+' '+c[2]+'!';return;}G.chr=c[0];const P=G.P;if(P.gr){P.vy=7;P.gr=false;P.ground=null;}SFX.coin(2);save();showPick();});box.appendChild(b);}
   show('pick');}
@@ -893,17 +908,32 @@ function updChaser(dt){const c=G.ch,P=G.P;if(!c.on||G.state!=='play')return;
   if(d<1.05&&P.inv<=0)die('caught');}
 function openShop(){if(G.state!=='play'&&G.state!=='ready')return;G.prev=G.state;G.state='shop';drawShop();show('shop');}
 function closeShop(){if(G.state!=='shop')return;if(G.prev==='ready')showReady();else{show(null);G.state='play';}}
-/* The Shop has four tabs. G.shopTab remembers the open one until the app is closed. */
-const SHOPT=[['boost','\u26A1','Boosts','Power-ups for tricky stages'],['trail','\u2728','Trails','Wear one trail at a time'],['gear','\uD83D\uDC51','Gear','Wear as many as you like'],['pet','\uD83D\uDC3E','Pets','One pet walks with you at a time']];
-function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL'),tab=G.shopTab||'boost',keep=L.dataset.tab===tab?L.scrollTop:0;L.innerHTML='';L.dataset.tab=tab;L.className='list'+(tab==='pet'?' grid':'');
+/* Things gems buy (Gems tab) and the Lucky Egg (Boosts tab). Stage Magic puts a twist on the stage being played: G.mg={s:stage,tw} is read by build() and cleared at stage clear.
+   The egg's prize is given and saved before the little opening show, so closing the app in the middle loses nothing. */
+const EGG_COST=600,GEM_COST=2500,BAG_COINS=500,KEYC=3,EGG='\uD83E\uDD5A',BAG='\uD83D\uDCB0',KEY='\uD83D\uDDDD\uFE0F',COIN='\uD83E\uDE99';
+const MAGIC=[['moon',2,'Moon Jump Magic','This stage: jump super high and float down'],['night',2,'Night Lights Magic','This stage: a dark path that lights up under your feet'],['rush',3,'Coin Rush Magic','This stage: coins everywhere!'],['gold',5,'Golden Stage Magic','This stage: a golden path and triple stage bonus']];
+function openEgg(){if(G.coins<EGG_COST)return;G.coins-=EGG_COST;const r=Math.random();let ic,tx;
+  if(r<.5){const n=150+10*((Math.random()*16)|0);G.coins+=n;ic=COIN;tx='+'+n+' coins!';}
+  else if(r<.72){const n=450+10*((Math.random()*31)|0);G.coins+=n;ic=BAG;tx='Wow! +'+n+' coins!';}
+  else if(r<.77){G.coins+=1500;ic=BAG;tx='JACKPOT! +1500 coins!';}
+  else if(r<.92){G.arm++;armHud();ic=SHIELD;tx='+1 Armor!';}
+  else if(r<.98){G.gems++;ic=GEM;tx='A gem! +1 '+GEM;}
+  else{G.gems+=2;ic=GEM;tx='Super lucky! +2 gems!';}
+  hud();save();const e=$('egg');G.eggOk=false;$('eggI').textContent=EGG;$('eggT').textContent='Crack, crack...';$('eggS').textContent='';e.className='on wob';
+  for(let i=0;i<3;i++)setTimeout(()=>SFX.keyUp(),i*300);
+  setTimeout(()=>{$('eggI').textContent=ic;$('eggT').textContent=tx;$('eggS').textContent='Tap to go on';e.className='on out';if(r>=.72)SFX.clear();else SFX.buy();G.eggOk=true;},950);}
+function closeEgg(){if(!G.eggOk)return;$('egg').className='';if(G.state==='shop')drawShop();}
+/* The Shop has five tabs. G.shopTab remembers the open one until the app is closed. */
+const SHOPT=[['boost','\u26A1','Boosts','Power-ups for tricky stages'],['trail','\u2728','Trails','Wear one trail at a time'],['gear','\uD83D\uDC51','Gear','Wear as many as you like'],['pet','\uD83D\uDC3E','Pets','One pet walks with you at a time'],['gem',GEM,'Gems','Magic starts the stage again from your checkpoint']];
+function drawShop(){$('shopC').textContent=G.coins;$('shopG').textContent=GEM+' '+gb();const L=$('shopL'),tab=G.shopTab||'boost',keep=L.dataset.tab===tab?L.scrollTop:0;L.innerHTML='';L.dataset.tab=tab;L.className='list'+(tab==='pet'?' grid':'');
   {const T=$('shopT');T.innerHTML='';for(const q of SHOPT){const b=document.createElement('button');b.className='tab'+(q[0]===tab?' sel':'');b.innerHTML='<b>'+q[1]+'</b>'+q[2];
-      const n=q[0]==='trail'?TR.filter(t=>G.own.indexOf(t.id)>=0).length:q[0]==='boost'?0:GEAR.filter(g=>(q[0]==='pet')===!!g.pet&&G.own.indexOf(g.id)>=0).length;
+      const n=q[0]==='trail'?TR.filter(t=>G.own.indexOf(t.id)>=0).length:q[0]==='boost'||q[0]==='gem'?0:GEAR.filter(g=>(q[0]==='pet')===!!g.pet&&G.own.indexOf(g.id)>=0).length;
       if(n){const i=document.createElement('i');i.textContent=n;b.appendChild(i);}
       b.addEventListener('click',()=>{if(G.shopTab===q[0])return;G.shopTab=q[0];SFX.keyUp();drawShop();});T.appendChild(b);
       if(q[0]===tab)$('shopCap').textContent=q[3];}}
   const row=(ic,name,desc,label,cls,fn,st)=>{const d=document.createElement('div');d.className='it'+(tab==='pet'?' card':'')+(st?' '+st:'');d.innerHTML='<b>'+ic+'</b><div><strong>'+name+'</strong><span>'+desc+'</span></div>';
     const b=document.createElement('button');b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',fn);d.appendChild(b);L.appendChild(d);};
-  if(tab==='boost'){const sc=100+40*G.stage;
+  if(tab==='boost'){const sc=150+60*G.stage;
   row('\u23ED\uFE0F','Skip Stage '+G.stage,'Jump straight to the next stage',G.coins>=sc?sc+' coins':'Need '+(sc-G.coins)+' more',G.coins>=sc?'':'no',()=>{
     if(G.coins<sc)return;G.coins-=sc;SFX.buy();prepStage(G.stage+1,0);showReady();});
   {const n=G.arm,can=G.coins>=ARM_COST;
@@ -911,16 +941,22 @@ function drawShop(){$('shopC').textContent=G.coins;const L=$('shopL'),tab=G.shop
       if(G.coins<ARM_COST)return;G.coins-=ARM_COST;G.arm+=3;if(G.prev==='play')SFX.armor();SFX.buy();hud();armHud();save();drawShop();},n?'mine':'');}
   {const n=G.rev+(G.revOn?1:0),can=G.coins>=REV_COST;
     row(HEART,'Instant Revive','For your next 2 stages: twice per stage, pop right back where you were instead of the checkpoint.'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?REV_COST+' coins':'Need '+(REV_COST-G.coins)+' more',can?'':'no',()=>{
-      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();},n?'mine':'');}}
+      if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();},n?'mine':'');}
+  {const can=G.coins>=EGG_COST;row(EGG,'Lucky Egg','Crack it open for a surprise: coins, Armor or even gems!',can?EGG_COST+' coins':'Need '+(EGG_COST-G.coins)+' more',can?'':'no',openEgg);}}
+  if(tab==='gem'){const g=gb(),need=n=>g>=n?GEM+' '+n:'Need '+(n-g)+' '+GEM;
+    {const can=G.coins>=GEM_COST;row(GEM,'One Gem','Trade coins for a shiny gem',can?GEM_COST+' coins':'Need '+(GEM_COST-G.coins)+' more',can?'':'no',()=>{if(G.coins<GEM_COST)return;G.coins-=GEM_COST;G.gems++;SFX.buy();hud();save();drawShop();});}
+    row(BAG,'Coin Bag','Trade 1 gem for '+BAG_COINS+' coins',need(1),g>=1?'':'no',()=>{if(gb()<1)return;G.gsp++;G.coins+=BAG_COINS;SFX.buy();hud();save();drawShop();});
+    for(const m of MAGIC){const on=!G.bn&&G.W.tw===m[0];row(TWS[m[0]].ic,m[2],m[3],on?'On now':need(m[1]),on?'on':(g>=m[1]?'':'no'),()=>{if(on||gb()<m[1])return;G.gsp+=m[1];G.mg={s:G.stage,tw:m[0]};SFX.buy();prepStage(G.stage,G.cp);showReady();},on?'me':'');}
+    {const inb=!!G.bn;row(KEY,'Bonus Room Key','Open the bonus coin room right now and win 3 Armor! You come back at your checkpoint.',inb?'In the room':need(KEYC),inb?'on':(g>=KEYC?'':'no'),()=>{if(G.bn||gb()<KEYC)return;G.gsp+=KEYC;SFX.buy();save();if(G.prev==='ready')go();else{show(null);G.state='play';}G.bnKey=true;});}}
   if(tab==='trail')for(const t of TR){const own=G.own.indexOf(t.id)>=0,can=G.coins>=t.cost;
     row(t.ic,t.name,t.desc,own?(G.eq===t.id?'Take off':'Equip'):(can?t.cost+' coins':'Need '+(t.cost-G.coins)+' more'),own?(G.eq===t.id?'on':'eq'):(can?'':'no'),()=>{
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
       save();drawShop();},own?(G.eq===t.id?'me':'mine'):'');}
-  if(tab==='gear'||tab==='pet')for(const g of GEAR){if((tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=G.coins>=g.cost;
-    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
+  if(tab==='gear'||tab==='pet'||tab==='gem')for(const g of GEAR){if(tab==='gem'?!g.gem:(tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=g.gem?gb()>=g.gem:G.coins>=g.cost;
+    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(g.gem?(can?GEM+' '+g.gem:'Need '+(g.gem-gb())+' '+GEM):can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
       if(own){gearTog(g);SFX.keyUp();}
-      else{if(!can)return;G.coins-=g.cost;G.own.push(g.id);gearOn(g);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
+      else{if(!can)return;if(g.gem)G.gsp+=g.gem;else G.coins-=g.cost;G.own.push(g.id);gearOn(g);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
       save();drawShop();},own?(on?'me':'mine'):'');}
   L.scrollTop=keep;}
 /* Treadmills: stand on one and the buddy runs in place. Every step banks +2 speed.
@@ -955,7 +991,7 @@ function drawTread(k,top,t){const g=k.gold?1:0,F=TRF[g],x=k.x,z=k.z,w=k.hx*2,l=k
 const REV_USES=2,HRT=[1,.35,.6],HRG=[.42,.42,.5];
 function drawHearts(t){const P=G.P;for(let i=0;i<REV_USES;i++){const on=i<G.revLeft,c=on?HRT:HRG,s=on?1.4:1,e=on?.55:0,x=P.x+(i-(REV_USES-1)/2)*.7,y=P.y+1.95+(on?Math.sin(t*3+i)*.05:0),z=P.z;
   D(SPH,x-.075*s,y+.05*s,z,.19*s,.19*s,.14*s,c,e);D(SPH,x+.075*s,y+.05*s,z,.19*s,.19*s,.14*s,c,e);D(CONE,x,y-.1*s,z,.3*s,.26*s,.14*s,c,e,1,0,Math.PI);}}
-const REV_COST=1500,HEART='\uD83D\uDC96';
+const REV_COST=2200,HEART='\uD83D\uDC96';
 function revHud(){$('revb').textContent=G.revOn?HEART+' Revive '+G.revLeft+'/'+REV_USES+(G.rev?' \u00B7 '+G.rev+' more stage'+(G.rev>1?'s':''):''):(G.rev?HEART+' Revive: '+G.rev+' stage'+(G.rev>1?'s':'')+' left':'');}
 function revTrack(dt){const P=G.P;if(G.state!=='play'||!P.gr||!P.ground)return;G.revT-=dt;if(G.revT>0)return;G.revT=.2;const t=P.ground;if(t.kind==='crumble'||t.kind==='bounce')return;
   G.revH.push({t,ox:P.x-t.x,oz:P.z-t.z});if(G.revH.length>8)G.revH.shift();}
@@ -969,10 +1005,10 @@ function revPlace(kind){const H=G.revH,P=G.P;   // after a fall, go back about h
    just ends it, with no bonk counted. One try per stage: G.bonusS remembers the stage whose door was used. Both swaps happen at the top of update(). */
 const BN_EVERY=3,BN_TIME=25,BN_ROWS=8,BN_ARM=3,CLOCK='\u23F1\uFE0F';
 function bnHud(){const b=G.bn;$('bnb').textContent=b?CLOCK+' '+Math.ceil(b.t)+'s \u00B7 '+G.W.coins.filter(c=>!c.got).length+' coins left':'';}
-function bonusEnter(){const W0=G.W;if(G.bn||!W0.portal||W0.bonusUsed)return;W0.bonusUsed=true;G.bonusS=G.stage;save();
-  G.bn={W:W0,t:BN_TIME,end:''};G.W=buildBonus(G.stage,W0.th);G.parts.length=0;placeAt(G.W.cps[0]);chReset();bgc.style.filter='brightness(.35)';
+function bonusEnter(key){const W0=G.W;if(G.bn)return;if(!key){if(!W0.portal||W0.bonusUsed)return;W0.bonusUsed=true;G.bonusS=G.stage;save();}
+  G.bn={W:W0,t:BN_TIME,end:'',ret:key?W0.cps[G.cp]:W0.portal.ret};G.W=buildBonus(G.stage,W0.th);G.parts.length=0;placeAt(G.W.cps[0]);chReset();bgc.style.filter='brightness(.35)';
   card('BONUS GAME','Grab every coin in '+BN_TIME+' seconds!');SFX.check();bnHud();}
-function bonusExit(){const b=G.bn,win=b.end==='win',W0=b.W,P=G.P;G.bn=null;G.W=W0;bgc.style.filter=W0.tw==='night'?'brightness(.3)':'';G.parts.length=0;{const c=W0.portal.ret;c.pressed=true;if(c.cp>G.cp)G.cp=c.cp;placeAt(c);}save();chReset();bnHud();
+function bonusExit(){const b=G.bn,win=b.end==='win',W0=b.W,P=G.P;G.bn=null;G.W=W0;bgc.style.filter=W0.tw==='night'?'brightness(.3)':'';G.parts.length=0;{const c=b.ret;c.pressed=true;if(c.cp>G.cp)G.cp=c.cp;placeAt(c);}save();chReset();bnHud();
   if(win){G.arm+=BN_ARM;armHud();save();SFX.clear();SFX.armor();toast('Bonus clear! You got '+BN_ARM+' Armor!');
     for(let i=0;i<3;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),26,CONF,7,{emis:.4}),i*200);}
   else{SFX.fall();toast(b.end==='time'?'Time is up! Good try!':'Oops! Good try!');}}
@@ -981,7 +1017,7 @@ function drawPortal(k,top,t){const x=k.x,z=k.z-k.hz+.2,on=!G.W.bonusUsed,F=on?[1
   D(CUBE,x,top+1.08,z,1.44,2.14,.08,on?hsv(t*.25,.6,1):[.25,.25,.32],on?.85:0);
   if(on)D(SPH,x,top+2.85+Math.sin(t*3)*.1,z,.42,.42,.42,GOLD,.8);}
 /* Armor: bought 3 at a time. G.arm is how many are left. Each one soaks up one hit (not a fall); the next one takes over right away, in the same stage or a later one. */
-const ARM_COST=1000,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
+const ARM_COST=1500,ARMC=[.55,.88,1],SHIELD='\uD83D\uDEE1\uFE0F';
 function armHud(){$('armb').textContent=G.arm>0?SHIELD+' Armor x'+G.arm:'';}
 function armBreak(kind){const P=G.P;G.arm--;P.inv=1.6;armHud();save();SFX.armor();burst(P.x,P.y+.6,P.z,26,[[.6,.9,1],[1,1,1],[.4,.7,1]],6,{emis:.6});
   spawn(P.x,P.y+.5,P.z,0,0,0,.5,.8,ARMC,{ring:true,g:0,emis:1});floater(G.arm>0?'Armor broke! '+G.arm+' left':'Armor broke!',P.x,P.y+1.8,P.z,'d');if(kind==='caught')chReset();}
@@ -992,13 +1028,13 @@ function die(kind){if(G.state!=='play')return;if(G.bn){if(!G.bn.end)G.bn.end='fa
   else if(kind==='caught'){SFX.chomp();burst(P.x,P.y+.5,P.z,26,[[.5,.4,.7],[.75,.65,.9],[1,1,1]],5,{sph:true});}else SFX.fall();
   floater(kind==='caught'?'Grumbles got you!':['Oopsie!','So close!','Nice try!','Almost!','Try again!'][(Math.random()*5)|0],P.x,Math.max(P.y,P.lastGY)+1.5,P.z,'');}
 function strk(){const e=$('strk');if(G.streak>=2){e.textContent='Dodge streak x'+G.streak;e.style.opacity=1;}else e.style.opacity=0;}
-function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;P.cel=0;floater('Yay!',P.x,P.y+2.4,P.z,'d');$('spd').classList.remove('on');G.revS=0;G.revOn=false;G.revLeft=0;revHud();G.bonusS=0;G.gemS=0;
+function stageClear(){G.state='clear';SFX.clear();const P=G.P,ch=G.ch;P.cel=0;floater('Yay!',P.x,P.y+2.4,P.z,'d');$('spd').classList.remove('on');G.revS=0;G.revOn=false;G.revLeft=0;revHud();G.bonusS=0;G.gemS=0;G.mg=null;
   if(ch.on&&ch.act){burst(ch.x,ch.y+.6,ch.z,26,[[.5,.4,.7],[.8,.7,.95]],5,{sph:true});floater('Bye bye, Grumbles!',ch.x,ch.y+2,ch.z,'');}ch.on=false;$('warn').style.opacity=0;
   for(let i=0;i<4;i++)setTimeout(()=>burst(P.x+rand(-2,2),P.y+2,P.z+rand(-2,2),30,CONF,7,{emis:.4}),i*220);
   const gold=G.W.tw==='gold',gemOk=!!(G.W.gem&&G.W.gem.got),bonus=(10+5*G.stage)*(gold?3:1),clean=G.bonks===0?20:0;const got=G.stageCoins;
   addCoins(bonus+clean,P.x,P.y+2,P.z,'+'+(bonus+clean),'d');
   $('clrT').textContent='Stage '+G.stage+' Clear!';
-  $('stats').innerHTML='<div style="font-size:34px;letter-spacing:4px">'+'\u2B50'.repeat(1+(clean?1:0)+(gemOk?1:0))+'<span style="opacity:.3">'+'\u2B50'.repeat(2-(clean?1:0)-(gemOk?1:0))+'</span></div>'+(gemOk?GEM+' Gem found! You have <b>'+G.gems+'</b><br>':'')+'Coins this stage: <b>'+got+'</b><br>'+(gold?'Golden stage bonus':'Stage bonus')+': <b>+'+bonus+'</b>'+(clean?'<br>No-bonk bonus: <b>+'+clean+'</b>':'')+'<br>Total coins: <b>'+G.coins+'</b>';
+  $('stats').innerHTML='<div style="font-size:34px;letter-spacing:4px">'+'\u2B50'.repeat(1+(clean?1:0)+(gemOk?1:0))+'<span style="opacity:.3">'+'\u2B50'.repeat(2-(clean?1:0)-(gemOk?1:0))+'</span></div>'+(gemOk?GEM+' Gem found! You have <b>'+gb()+'</b><br>':'')+'Coins this stage: <b>'+got+'</b><br>'+(gold?'Golden stage bonus':'Stage bonus')+': <b>+'+bonus+'</b>'+(clean?'<br>No-bonk bonus: <b>+'+clean+'</b>':'')+'<br>Total coins: <b>'+G.coins+'</b>';
   {let gl='';for(const g of GEAR){if(!g.st||G.own.indexOf(g.id)<0)continue;const n=G.gs[g.id]=(G.gs[g.id]||1)-1;
       if(n>0)gl+='<br>'+g.ic+' '+g.name+': <b>'+n+'</b> more stage'+(n>1?'s':'');
       else{delete G.gs[g.id];G.own.splice(G.own.indexOf(g.id),1);const i=G.gon.indexOf(g.id);if(i>=0)G.gon.splice(i,1);gl+='<br>'+g.ic+' '+g.name+' is used up';}}
@@ -1038,6 +1074,7 @@ function collideH(ax){const P=G.P,T=G.W.tiles;for(let i=0;i<T.length;i++){const 
   if(ox>0&&oz>0){if(ax===0){P.x+=P.x<t.x?-ox:ox;P.vx=0;}else{P.z+=P.z<t.z?-oz:oz;P.vz=0;P.bz=0;}}}}
 function update(dt){
   if(G.bnGo){G.bnGo=false;bonusEnter();}
+  if(G.bnKey&&G.state==='play'){G.bnKey=false;bonusEnter(true);}
   if(G.bn&&G.bn.end)bonusExit();
   const P=G.P,W=G.W,th=W.th,T=W.tiles;G.t+=dt;
   // tiles
@@ -1122,7 +1159,7 @@ function update(dt){
           burst(c.x,c.y,c.z,7+Math.min(G.combo,8),[GOLD,[1,1,.7]],3+Math.min(G.combo,6)*.3,{emis:.8,g:6});spawn(c.x,c.y,c.z,0,0,0,.4,.5,GOLD,{ring:true,g:0,emis:1});
           if(G.bn){bnHud();if(!W.coins.some(q=>!q.got))G.bn.end='win';}}}
       // the hidden gem
-      {const q=W.gem;if(q&&!q.got&&Math.abs(q.z-P.z)<1&&Math.abs(q.x-P.x)<.9&&q.y>P.y-.5&&q.y<P.y+1.5){q.got=true;G.gems++;G.gemS=G.stage;save();toast('You found the gem! '+GEM+' '+G.gems);
+      {const q=W.gem;if(q&&!q.got&&Math.abs(q.z-P.z)<1&&Math.abs(q.x-P.x)<.9&&q.y>P.y-.5&&q.y<P.y+1.5){q.got=true;G.gems++;G.gemS=G.stage;save();toast('You found the gem! '+GEM+' '+gb());
           [0,4,7,12,16].forEach((n,i)=>Tn({t:i*.06,type:'triangle',f:523.25*Math.pow(2,n/12),d:.22,g:.1}));burst(q.x,q.y,q.z,26,[[.5,.9,1],[1,.6,.9],[1,1,1],[.7,1,.7]],6,{emis:1,g:4});spawn(q.x,q.y,q.z,0,0,0,.6,.7,[.6,.95,1],{ring:true,g:0,emis:1});}}
       // wind gusts (Windy Day)
       if(tw==='wind'&&!P.onTr){const w=G.wd;
@@ -1211,6 +1248,8 @@ function drawChar(FX){const P=G.P,t=G.t,a=P.face,rx=Math.cos(a),rz=Math.sin(a),f
   if(wear('wings')){const f=P.gr?Math.sin(t*4)*.04:Math.sin(t*22)*.12;two(.38+f,.64,-.26,.54+f,.6,.07,[.66,.58,1],.5);two(.31+f*.6,.36,-.24,.34,.38,.06,[1,.66,.88],.45);}
   if(wear('crown')){const cy=CRY[c]||.88,y=by+cy*sy;D(CUBE,P.x,y,P.z,.34,.1,.34,GOLD,.5,1,-a,0,.03);
     for(let i=-1;i<=1;i++)D(CONE,P.x+rx*i*.11,y+.12,P.z+rz*i*.11,.11,.16,.11,GOLD,.6);part(0,cy,.17,.08,.08,.05,[1,.25,.4],.6);}
+  if(wear('halo')){const cy=(CRY[c]||.88)+(wear('crown')?.5:.32);D(SPH,P.x,by+cy*sy+Math.sin(t*3)*.03,P.z,.46,.06,.46,[1,.95,.55],1);}
+  if(wear('cape')){const f=P.gr?Math.sin(t*5)*.03:.12,R=[.92,.18,.3];part(0,.52,-.36-f,.62,.62,.1,R,.25);part(0,.22,-.42-f*2,.72,.34,.1,R,.25);}
   if(wear('balloon')){const o=.46+Math.sin(t*2)*.05,X=P.x+rx*o-fx*.05,Z=P.z+rz*o-fz*.05,R=[.25,.85,.8];
     D(CUBE,X,by+1.12,Z,.025,1.1,.025,[1,1,1],.2);D(CONE,X,by+1.66,Z,.1,.1,.1,R,.3);D(SPH,X,by+2,Z,.5,.6,.5,R,.35);}
 }
@@ -1234,6 +1273,9 @@ function drawPet(t,kind){const q=G.pet,P=G.P,a=Math.atan2(P.x-q.x,q.z-P.z),fx=Ma
   else if(kind==='turtle'){const S=[.2,.6,.32],H=[.62,.85,.42],st=run?Math.sin(t*7)*.05:0;
     p(0,.2,-.02,.52,.3,.56,S,.12);p(0,.11,-.02,.56,.1,.6,[.95,.86,.5],.1);p(0,.25,.31,.2,.2,.22,H,.12);
     p(-.25,.07,.14+st,.14,.1,.16,H);p(.25,.07,.14-st,.14,.1,.16,H);eyes(.06,.3,.4,.05);}
+  else if(kind==='dragon'){const B=[.36,.8,.46],Wg=[1,.6,.25],fl=Math.sin(t*10)*.08;
+    p(0,.24,-.04,.4,.38,.5,B,.2);p(0,.52,.17,.32,.3,.34,B,.2);p(0,.44,.33,.2,.14,.16,[.78,.95,.6],.15);c(0,.76,.14,.1,.2,.1,Wg,.4);
+    p(-.27,.44+fl,-.1,.24,.28,.06,Wg,.4);p(.27,.44+fl,-.1,.24,.28,.06,Wg,.4);eyes(.09,.58,.3,.06);}
   else if(kind==='pony'){const B=[1,1,1],M=[1,.6,.85];
     p(0,.24,-.06,.36,.36,.52,B,.3);p(0,.52,.17,.28,.3,.34,B,.3);c(0,.76,.2,.07,.22,.07,GOLD,.7);
     p(0,.56,0,.12,.3,.2,M,.35);p(0,.3,-.33,.12,.3,.12,[.62,.6,1],.35);eyes(.08,.56,.31,.055);}
@@ -1360,7 +1402,7 @@ window.addEventListener('blur',()=>{inp.k={};});
 document.addEventListener('touchmove',e=>{if(!(e.target.closest&&e.target.closest('.list')))e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
-let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list,input')))e.preventDefault();lastTouch=n;},{passive:false});
+let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list,input,#egg')))e.preventDefault();lastTouch=n;},{passive:false});
 
 /* ====================== Menus ====================== */
 function pause(){if(G.state!=='play')return;{const e=$('bBest2');if(G.best>G.stage){e.style.display='';e.textContent='Go to Stage '+G.best+' (my best)';}else e.style.display='none';}G.state='pause';$('pause').classList.add('on');if(A.ctx)A.ctx.suspend();}
@@ -1377,7 +1419,7 @@ $('bCont').addEventListener('click',()=>{initAudio();const s=load();if(s){G.coin
 $('bNext').addEventListener('click',()=>{initAudio();prepStage(G.stage+1,0);showReady();});
 $('bPkOk').addEventListener('click',showReady);$('bBud').addEventListener('click',showPick);
 $('bGo').addEventListener('click',()=>{initAudio();go();});
-$('coinp').addEventListener('click',openShop);$('bShop2').addEventListener('click',openShop);$('bShopX').addEventListener('click',closeShop);
+$('coinp').addEventListener('click',openShop);$('bShop2').addEventListener('click',openShop);$('bShopX').addEventListener('click',closeShop);$('egg').addEventListener('click',closeEgg);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 $('bNmOk').addEventListener('click',nameOk);$('nmIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameOk();}});
 $('bNmX').addEventListener('click',()=>{$('nmIn').blur();nameCb=null;show('start');});

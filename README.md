@@ -17,6 +17,15 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
+### 2026-11-23
+- **보석을 쓸 수 있어요** (Shop의 새 **Gems** 탭). 써도 이미 열린 캐릭터는 그대로입니다.
+  - Stage Magic: 지금 스테이지를 Moon Jump(2), Night Lights(2), Coin Rush(3), Golden Stage(5)로 바꾸기
+  - Bonus Room Key(3): 어느 스테이지에서나 보너스 방에 들어가기
+  - Baby Dragon(15): 새 발판마다 코인 +3인 펫 · Shiny Halo(6) · Super Cape(10)
+  - Coin Bag: 보석 1개 → 코인 500 · One Gem: 코인 2500 → 보석 1개
+- **Lucky Egg** (Boosts 탭, 600코인): 알을 깨면 코인, Armor, 보석 중 하나가 나옵니다.
+- **가격 인상**: Shop의 모든 가격이 약 1.5배가 됐습니다(예: Armor 1500, Instant Revive 2200, 펫 1000~3000). 이미 산 것은 그대로입니다.
+
 ### 2026-11-20
 - **새 펫 5종**: Tiny Hamster(700), Little Turtle(700), Fluffy Kitten(900), Happy Puppy(900), Magic Unicorn(2000). 병아리처럼 뒤따라오며 새 발판마다 코인 +1(유니콘은 +2). 펫은 한 번에 한 마리만 데리고 다닙니다.
 - **Shop 정리**: Boosts / Trails / Gear / Pets 탭 4개로 나눴습니다. 가진 것은 노란 바탕, 쓰는 중인 것은 주황 테두리로 보입니다.
