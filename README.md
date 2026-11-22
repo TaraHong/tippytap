@@ -18,6 +18,10 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-23
+- **Squish World**: 첫 화면에서 Tippy Tap Escape와 Squish World 중 고릅니다.
+  - 말랑이 28종, 희귀도 7단계(Common → Mythic). 보석으로 미스터리 캡슐(Mini 2 / Super 5 / Mega 10)을 열면 랜덤으로 나오고, 비싼 캡슐일수록 희귀한 것이 잘 나옵니다. 처음 한 번은 무료 캡슐.
+  - 내 말랑이를 3D로 360도 돌려 보고, 누르면 납작해지고 당기면 늘어납니다. 종류마다 다른 ASMR 소리가 납니다(젤, 젤리, 물구슬, 끈적임, 고운 모래, 비즈, 눈, 폼, 고무 9가지).
+  - 가상 친구 5명과 교환: Add로 올리고 Accept / Decline. 친구가 먼저 교환을 청하기도 합니다.
 - **보석을 쓸 수 있어요** (Shop의 새 **Gems** 탭). 써도 이미 열린 캐릭터는 그대로입니다.
   - Stage Magic: 지금 스테이지를 Moon Jump(2), Night Lights(2), Coin Rush(3), Golden Stage(5)로 바꾸기
   - Bonus Room Key(3): 어느 스테이지에서나 보너스 방에 들어가기
