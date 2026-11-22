@@ -241,14 +241,14 @@ body.pwv #pwU{display:flex}
   <p id="hi0" style="font-weight:900;min-height:22px"></p>
   <div class="hrow">
     <button class="hc" id="bHmPlay"><b>&#x1F430;</b><strong>Tippy Tap Escape</strong><span>Run, hop and dodge!</span></button>
-    <button class="hc sq" id="bHmSq"><b>&#x1F361;</b><strong>Squish World</strong><span>Collect, squish and trade!</span></button>
+    <button class="hc sq" id="bHmSq"><b>&#x2328;&#xFE0F;</b><strong>Keyboard World</strong><span>Collect, type and trade!</span></button>
     <button class="hc pw" id="bHmPw"><b>&#x1F43E;</b><strong>Pet World</strong><span>Feed, wash and play with your pets!</span></button>
   </div>
   <div id="tst" style="display:none;margin-top:14px"><p style="font-size:13px;font-weight:900;margin:0 0 4px;opacity:.9">TEST MODE (only in the preview, never on the real game)</p>
-    <div class="row"><button class="sqb" id="bTsSq">All squishes</button><button class="sqb" id="bTsPet">All pets</button><button class="sqb" id="bTsGem">+50 gems</button><button class="sqb" id="bTsCoin">+10000 coins</button></div></div>
+    <div class="row"><button class="sqb" id="bTsSq">All keyboards</button><button class="sqb" id="bTsPet">All pets</button><button class="sqb" id="bTsGem">+50 gems</button><button class="sqb" id="bTsCoin">+10000 coins</button></div></div>
 </div>
 <div id="sq" class="ov">
-  <div class="sqh"><button class="sqb" id="bSqX">&#x25C0; Home</button><h2>Squish World</h2><div class="sqgem" id="sqG"></div></div>
+  <div class="sqh"><button class="sqb" id="bSqX">&#x25C0; Home</button><h2>Keyboard World</h2><div class="sqgem" id="sqG"></div></div>
   <div id="sqT" class="tabs"></div>
   <div id="sqL" class="scr"></div>
 </div>
@@ -1517,62 +1517,67 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
 let lastTouch=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouch<320&&!(e.target.closest&&e.target.closest('button,#coinp,.list,input,#egg,#sq,#pwU')))e.preventDefault();lastTouch=n;},{passive:false});
 
-/* ====================== Squish World ======================
-   A second place next to the game: squishy toys to collect, play with and trade. They are bought with gems in mystery capsules.
-   Everything is drawn with the same three meshes as the game (no new shader). The camera orbits the squish, so parts need no rotation of their own.
-   A squish is squashed and stretched by scaling and leaning all of its parts together (ST), driven by five little springs (SV). */
+/* ====================== Keyboard World ======================
+   A second place next to the game: little fidget keyboards to collect, type on and trade. They are bought with gems in mystery capsules.
+   (It began as Squish World, a collection of squishy toys, and the user asked for keyboards instead. The code still says sq and the save fields
+   keep their names and ids, so what a player had collected carried over. The old toy shapes in SHP are now the charms on the keycaps.)
+   Everything is drawn with the same meshes as the game. The camera orbits the keyboard, so nothing needs rotating. */
+const KBV=['thock','clicky','creamy','clack','bubble','type','marble'],KBN={thock:'Thocky',clicky:'Clicky',creamy:'Creamy',clack:'Clacky',bubble:'Bubbly',type:'Typewriter',marble:'Marble'};
 const SQT=[null,['Common','#8f98ad'],['Uncommon','#3fbf6e'],['Rare','#3f8fff'],['Super Rare','#9a5cff'],['Epic','#ff4f9e'],['Legendary','#f59b00'],['Mythic','#e23bd0']];
-const SQV=[0,1,2,4,9,20,45,110];   // what one squish of each rarity is worth in a trade
+const SQV=[0,1,2,4,9,20,45,110];   // what one keyboard of each rarity is worth in a trade
 const SQ=[
- ['lemon','Lemon Ball',1,'ball',[[1,.86,.3]],'bouncy','gel'],
- ['mint','Mint Cube',1,'cube',[[.5,.9,.76]],'jelly','jelly'],
- ['dew','Berry Drop',1,'drop',[[1,.5,.68]],'jelly','pop'],
- ['sky','Sky Ball',1,'ball',[[.45,.75,1]],'bouncy','squeak'],
+ ['lemon','Lemon Pop',1,'ball',[[1,.86,.3]],'bouncy','gel'],
+ ['mint','Mint Chip',1,'cube',[[.5,.9,.76]],'jelly','jelly'],
+ ['dew','Berry Milk',1,'drop',[[1,.5,.68]],'jelly','pop'],
+ ['sky','Sky Blue',1,'ball',[[.45,.75,1]],'bouncy','squeak'],
  ['kitty','Mochi Kitty',2,'mochi',[[1,.95,.86],[1,.68,.74]],'slow','slow',{ear:'cat'}],
- ['bunny','Mochi Bunny',2,'mochi',[[1,.82,.9],[1,.6,.72]],'slow','slow',{ear:'bun'}],
- ['cloud','Puffy Cloud',2,'cloud',[[1,1,1]],'slow','slow'],
- ['bun','Soup Bun',2,'bun',[[1,.95,.86]],'jelly','gel'],
- ['shroom','Spotty Shroom',3,'shroom',[[1,.36,.36],[1,.96,.88]],'bouncy','squeak'],
- ['star','Twinkle Star',3,'star',[[1,.85,.3]],'bouncy','pop'],
- ['octo','Bubble Octo',3,'octo',[[.7,.55,1]],'jelly','bubble'],
- ['heart','Jelly Heart',3,'heart',[[1,.3,.45]],'jelly','jelly'],
- ['sundae','Sundae Swirl',4,'sundae',[[1,.74,.85],[.93,.72,.42]],'slow','snow'],
- ['pud','Wobble Pudding',4,'pud',[[1,.86,.5],[.62,.33,.12]],'wobble','jelly'],
- ['berry','Sweet Berry',4,'berry',[[1,.25,.35],[.3,.75,.35]],'bouncy','crunch'],
- ['whale','Baby Whale',4,'whale',[[.4,.65,1],[.86,.94,1]],'jelly','bubble'],
- ['glit','Glitter Orb',5,'orb',[[1,.6,.85]],'jelly','chime',{gl:1}],
+ ['bunny','Bunny Hop',2,'mochi',[[1,.82,.9],[1,.6,.72]],'slow','slow',{ear:'bun'}],
+ ['cloud','Cloud Nine',2,'cloud',[[1,1,1]],'slow','slow'],
+ ['bun','Bun Bakery',2,'bun',[[1,.95,.86]],'jelly','gel'],
+ ['shroom','Shroom Forest',3,'shroom',[[1,.36,.36],[1,.96,.88]],'bouncy','squeak'],
+ ['star','Star Candy',3,'star',[[1,.85,.3]],'bouncy','pop'],
+ ['octo','Octo Bubble',3,'octo',[[.7,.55,1]],'jelly','bubble'],
+ ['heart','Heart Beat',3,'heart',[[1,.3,.45]],'jelly','jelly'],
+ ['sundae','Sundae Shop',4,'sundae',[[1,.74,.85],[.93,.72,.42]],'slow','snow'],
+ ['pud','Pudding Party',4,'pud',[[1,.86,.5],[.62,.33,.12]],'wobble','jelly'],
+ ['berry','Berry Farm',4,'berry',[[1,.25,.35],[.3,.75,.35]],'bouncy','crunch'],
+ ['whale','Whale Bay',4,'whale',[[.4,.65,1],[.86,.94,1]],'jelly','bubble'],
+ ['glit','Glitter Pop',5,'orb',[[1,.6,.85]],'jelly','chime',{gl:1}],
  ['stack','Rainbow Stack',5,'stack',[[1,1,1]],'wobble','pop'],
- ['cryst','Crystal Cube',5,'ccube',[[.6,.9,1]],'jelly','crunch'],
+ ['cryst','Crystal Ice',5,'ccube',[[.6,.9,1]],'jelly','crunch'],
  ['honey','Honey Bear',5,'mochi',[[1,.74,.28],[1,.9,.6]],'slow','slow',{ear:'bear',em:.3}],
- ['dia','Diamond Jelly',6,'dia',[[.7,.95,1]],'wobble','chime'],
- ['egg','Dragon Egg',6,'egg',[[.28,.72,.5],[1,.82,.2]],'bouncy','snow'],
- ['planet','Ringed Planet',6,'planet',[[1,.66,.4],[1,.9,.7]],'jelly','gel'],
- ['lava','Lava Ball',6,'ball',[[1,.36,.12]],'wobble','bubble',{lava:1}],
- ['uni','Unicorn Mochi',7,'mochi',[[1,1,1],[1,.7,.9]],'slow','slow',{ear:'uni'}],
- ['galaxy','Galaxy Orb',7,'orb',[[.36,.24,.7]],'wobble','chime',{gl:2}],
+ ['dia','Diamond Deck',6,'dia',[[.7,.95,1]],'wobble','chime'],
+ ['egg','Dragon Nest',6,'egg',[[.28,.72,.5],[1,.82,.2]],'bouncy','snow'],
+ ['planet','Planet Park',6,'planet',[[1,.66,.4],[1,.9,.7]],'jelly','gel'],
+ ['lava','Lava Glow',6,'ball',[[1,.36,.12]],'wobble','bubble',{lava:1}],
+ ['uni','Unicorn Dream',7,'mochi',[[1,1,1],[1,.7,.9]],'slow','slow',{ear:'uni'}],
+ ['galaxy','Galaxy Board',7,'orb',[[.36,.24,.7]],'wobble','chime',{gl:2}],
  ['rkitty','Rainbow Kitty',7,'mochi',[[1,1,1],[1,.7,.75]],'jelly','jelly',{ear:'cat',hue:1}],
  ['gstar','Golden Star',7,'star',[[1,.8,.18]],'bouncy','chime',{em:.55}]
-].map(a=>({id:a[0],n:a[1],t:a[2],sh:a[3],c:a[4],k:a[5],s:a[6],o:a[7]||{}}));
+].map((a,i)=>({id:a[0],n:a[1],t:a[2],sh:a[3],c:a[4],s:KBV[i%7],o:a[7]||{}}));
 const SQI={};for(const d of SQ)SQI[d.id]=d;
-const FEEL={bouncy:[170,9],jelly:[120,5.5],wobble:[80,3.2],slow:[22,7.5]};   // spring stiffness and damping once the finger lets go
 const CAPS=[{id:'s',n:'Mini Capsule',g:2,cc:'#7fd0ff',col:[.5,.82,1],p:[55,25,12,5,2,.8,.2]},
  {id:'m',n:'Super Capsule',g:5,cc:'#ff8fc6',col:[1,.56,.78],p:[25,30,22,13,6.5,2.8,.7]},
  {id:'l',n:'Mega Capsule',g:10,cc:'#ffc23d',col:[1,.76,.24],p:[0,20,30,25,15,7.5,2.5]}];
 /* Pretend friends to trade with. g is how hard a bargain they drive (under 1 is generous), t the rarities they start with. */
-const FR=[{id:'mimi',n:'Mimi',e:'🐱',g:1,t:[1,3],d:'Loves cute mochi friends'},{id:'pip',n:'Pip',e:'🐧',g:.85,t:[1,3],d:'Easy-going trader'},
+const FR=[{id:'mimi',n:'Mimi',e:'🐱',g:1,t:[1,3],d:'Loves cute keycaps'},{id:'pip',n:'Pip',e:'🐧',g:.85,t:[1,3],d:'Easy-going trader'},
  {id:'coco',n:'Coco',e:'🐻',g:.75,t:[1,4],d:'Very generous!'},{id:'bolt',n:'Bolt',e:'🤖',g:1.2,t:[2,5],d:'Tough trader with rare stuff'},
- {id:'luna',n:'Luna',e:'🦄',g:1,t:[3,6],d:'Collects the rarest squishes'}];
+ {id:'luna',n:'Luna',e:'🦄',g:1,t:[3,6],d:'Collects the rarest keyboards'}];
 const FRI={};for(const f of FR)FRI[f.id]=f;
 const SQS={tab:'mine',mode:'',cur:null,t:0,ya:.4,pi:.22,idle:9,pid:null,pm:'',x0:0,y0:0,lx:0,ly:0,acc:0,op:null,parts:[],dist:5,rat:0,tk:0};
-const SV={sq:0,wx:0,wz:0,lx:0,lz:0,vsq:0,vwx:0,vwz:0,vlx:0,vlz:0,tsq:0,twx:0,twz:0,tlx:0,tlz:0,held:false};
-const ST={x:1,y:1,z:1,lx:0,lz:0,eye:1},SQA=[],SQTH={};
+/* Three rows of six keys, then a small key, a long space bar and a small key. KB holds how far each key is down, how many fingers hold it,
+   the recent presses (the light spreads out from them) and which finger is on which key. */
+const KEYS=[];for(let r=0;r<3;r++)for(let c=0;c<6;c++)KEYS.push({x:(c-2.5)*.64,z:(r-1.5)*.64,w:.56});KEYS.push({x:-1.6,z:.96,w:.56},{x:0,z:.96,w:2.48,sp:1},{x:1.6,z:.96,w:.56});
+const KB={d:KEYS.map(()=>0),tg:KEYS.map(()=>0),ev:[],ptr:{},drop:0};
+const ST={ox:0,oy:0,oz:0,s:1,eye:1},SQA=[],SQTH={};
 let TDE=null;
 const SPHH=(()=>{const P=[],N=[],LA=20,LO=32,pt=(i,j)=>{const th=i/LA*Math.PI,ph=j/LO*Math.PI*2;return[Math.sin(th)*Math.cos(ph),Math.cos(th),Math.sin(th)*Math.sin(ph)];};
   for(let i=0;i<LA;i++)for(let j=0;j<LO;j++){const a=pt(i,j),b=pt(i+1,j),c=pt(i+1,j+1),d=pt(i,j+1);for(const p of [a,b,c,a,c,d]){P.push(p[0]*.5,p[1]*.5,p[2]*.5);N.push(p[0],p[1],p[2]);}}
   return mkMesh(P,N);})();   // a rounder ball than the game's: squishes are looked at up close
-function q(m,x,y,z,sx,sy,sz,col,e,al,bv,ry,rx){if(m===SPH)m=SPHH;const T=ST,Y=y*T.y,X=x*T.x+T.lx*Y,Z=z*T.z+T.lz*Y;
-  if(al!==undefined&&al<1)SQA.push([m,X,Y,Z,sx*T.x,sy*T.y,sz*T.z,col,e||0,al,ry||0,rx||0,bv||0]);
-  else D(m,X,Y,Z,sx*T.x,sy*T.y,sz*T.z,col,e||0,1,ry||0,rx||0,bv||0);}
+/* q() places one part of a charm (or of the capsule): ST moves and shrinks the whole thing onto its keycap. See-through parts wait in SQA. */
+function q(m,x,y,z,sx,sy,sz,col,e,al,bv,ry,rx){const T=ST,s=T.s;if(m===SPH&&s>.6)m=SPHH;const X=T.ox+x*s,Y=T.oy+y*s,Z=T.oz+z*s;
+  if(al!==undefined&&al<1)SQA.push([m,X,Y,Z,sx*s,sy*s,sz*s,col,e||0,al,ry||0,rx||0,(bv||0)*s]);
+  else D(m,X,Y,Z,sx*s,sy*s,sz*s,col,e||0,1,ry||0,rx||0,(bv||0)*s);}
 function sqFace(y,z,s,w){const dx=(w||.2)*s,ey=.17*s*ST.eye;
   q(SPH,-dx,y,z,.13*s,ey,.09*s,DK);q(SPH,dx,y,z,.13*s,ey,.09*s,DK);
   q(SPH,-dx+.028*s,y+.04*s*ST.eye,z+.036*s,.05*s,.05*s*ST.eye,.03*s,[1,1,1],.7);q(SPH,dx+.028*s,y+.04*s*ST.eye,z+.036*s,.05*s,.05*s*ST.eye,.03*s,[1,1,1],.7);
@@ -1622,29 +1627,36 @@ const SHP={
  planet(c,o,t){q(SPH,0,.72,0,1.06,1.06,1.06,c[0],.15);q(SPH,0,.86,0,1.0,.14,1.0,c[1],.1);q(SPH,0,.56,0,1.03,.1,1.03,c[1],.1);
    q(SPH,Math.cos(t*.9)*1.02,.72+Math.sin(t*.9)*.22,Math.sin(t*.9)*1.02,.2,.2,.2,[.9,.95,1],.3);q(SPH,0,.72,0,2,.05,2,c[1],.35,.6,0,.32);sqFace(.74,.5,.95);}
 };
-function sqDraw(d,t){SQA.length=0;SHP[d.sh](d.c,d.o,t);
-  if(d.t>=5){const n=d.t>=7?7:d.t>=6?5:3;for(let i=0;i<n;i++){const a=t*.9+i*6.283/n,r=1.05+.08*Math.sin(t*2+i);
-    D(SPH,Math.cos(a)*r,.32+.36*(i%3)+.12*Math.sin(t*1.7+i*2),Math.sin(a)*r,.07,.07,.07,d.t>=7?hsv(i/n+t*.2,.5,1):[1,.95,.7],1);}}
+/* How lit key j is: full while held, then a short fade. Only the key that was pressed lights up (the light used to spread to the keys around it; the user asked for one key only). */
+function kbL(j,t){let L=KB.tg[j]>0?1:0;for(const e of KB.ev)if(e.i===j)L=Math.max(L,1-(t-e.t)/.45);return Math.max(0,L);}
+/* One keyboard: base, plate, keys with their light, and a charm on every keycap. The charms are the board's own shape and three borrowed from other boards. */
+function sqDraw(d,t){SQA.length=0;const B=d.c[0],hi=d.t>=5,i0=SQ.indexOf(d),cry=d.sh==='ccube'||d.sh==='dia'||d.sh==='orb',h0=sr(i0+1),oy=KB.drop;
+  const ch=[d,SQ[(i0+5)%28],SQ[(i0+11)%28],SQ[(i0+17)%28]],K1=[.5+B[0]*.5,.5+B[1]*.5,.5+B[2]*.5],K2=[.76+B[0]*.24,.76+B[1]*.24,.76+B[2]*.24];
+  ST.eye=(t%3.4)<.12?.15:1;SQA.push([SPHH,0,.012,0,5.5,.02,4.1,[.25,.2,.45],0,.13,0,0,0]);
+  D(CUBE,0,oy+.17,0,4.2,.34,2.95,B,hi?.22:.08,1,0,0,.1);D(CUBE,0,oy+.34,0,3.98,.04,2.73,[B[0]*.5,B[1]*.5,B[2]*.56],0);
+  for(let j=0;j<KEYS.length;j++){const k=KEYS[j],L=kbL(j,t),l=Math.max(L,hi?.22+.14*Math.sin(t*2.2-k.x*1.4-k.z):0);
+    const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),kc=hi?hsv((k.x+2)*.11+h0,.28,1):j%2?K1:K2,m=Math.min(1,L*1.1);
+    const col=[kc[0]+(led[0]-kc[0])*m,kc[1]+(led[1]-kc[1])*m,kc[2]+(led[2]-kc[2])*m],y=oy+.5-KB.d[j]*.1;
+    if(l>.03)D(CUBE,k.x,oy+.37,k.z,k.w+.1,.04,.66,led,l*1.4);
+    if(cry)SQA.push([CUBE,k.x,y,k.z,k.w,.28,.56,col,.25+L*.6,.62,0,0,.07]);else D(CUBE,k.x,y,k.z,k.w,.28,.56,col,.06+L*.8,1,0,0,.07);
+    if(k.sp){D(SPH,k.x-.8,y+.145,k.z,.2,.03,.2,led,.3+L*.6);D(SPH,k.x,y+.145,k.z,.26,.03,.26,[1,1,1],.2+L*.6);D(SPH,k.x+.8,y+.145,k.z,.2,.03,.2,led,.3+L*.6);}
+    else{const c=ch[j>17?(j>19?1:0):[0,1,0,2,0,3][(j%6+((j/6)|0)*2)%6]];ST.ox=k.x;ST.oy=y+.14;ST.oz=k.z;ST.s=.34;SHP[c.sh](c.c,c.o,t+j*.7);}}
+  ST.ox=ST.oy=ST.oz=0;ST.s=1;
+  if(hi){const n=d.t>=7?7:d.t>=6?5:3;for(let i=0;i<n;i++){const a=t*.7+i*6.283/n;D(SPH,Math.cos(a)*2.9,.7+.3*Math.sin(t*1.7+i*2),Math.sin(a)*2.2,.12,.12,.12,d.t>=7?hsv(i/n+t*.2,.5,1):[1,.95,.7],1);}}
   sqFlush();}
-function sqFlush(){gl.depthMask(false);D(SPHH,ST.lx*.2,.012,ST.lz*.2,1.36*ST.x,.02,1.36*ST.z,[.25,.2,.45],0,.12);
-  for(const a of SQA)D(a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12]);gl.depthMask(true);SQA.length=0;}
+function sqFlush(){gl.depthMask(false);for(const a of SQA)D(a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12]);gl.depthMask(true);SQA.length=0;}
 function sqCam(ya,pi,dist,asp,ty){const ex=Math.sin(ya)*Math.cos(pi)*dist,ey=ty+Math.sin(pi)*dist,ez=Math.cos(ya)*Math.cos(pi)*dist;
   persp(PRJ,40*Math.PI/180,asp,.2,80);lookAt(VW,ex,ey,ez,0,ty,0);mul(VP,PRJ,VW);
   gl.uniformMatrix4fv(U_.uVP,false,VP);gl.uniform3f(U_.uEye,ex,ey,ez);gl.uniform2f(U_.uFog,400,500);gl.uniform1f(U_.uAmb,1);}
-function sqRest(){ST.x=ST.y=ST.z=ST.eye=1;ST.lx=ST.lz=0;}
-/* Small pictures of every squish for the lists: each is drawn once into a corner of the game canvas and copied out in the same frame. */
+function sqRest(){ST.ox=ST.oy=ST.oz=0;ST.s=ST.eye=1;KB.drop=0;KB.ev.length=0;KB.ptr={};for(let j=0;j<KEYS.length;j++)KB.d[j]=KB.tg[j]=0;}
+/* Small pictures of every keyboard for the lists: each is drawn once into a corner of the game canvas and copied out in the same frame. */
 function sqThumbs(){if(SQTH.ok)return;const S=Math.min(168,cv.width,cv.height),c2=document.createElement('canvas');c2.width=c2.height=S;const x=c2.getContext('2d');sqRest();
   gl.depthMask(true);gl.viewport(0,0,S,S);gl.enable(gl.SCISSOR_TEST);gl.scissor(0,0,S,S);
-  for(const d of SQ){gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);sqCam(.5,.3,3.5,1,.64);sqDraw(d,1.3);x.clearRect(0,0,S,S);x.drawImage(cv,0,cv.height-S,S,S,0,0,S,S);SQTH[d.id]=c2.toDataURL('image/png');}
+  for(const d of SQ){gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);sqCam(.42,.82,7.7,1,.2);sqDraw(d,1.3);x.clearRect(0,0,S,S);x.drawImage(cv,0,cv.height-S,S,S,0,0,S,S);SQTH[d.id]=c2.toDataURL('image/png');}
   gl.disable(gl.SCISSOR_TEST);gl.viewport(0,0,cv.width,cv.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);SQTH.ok=true;}
-/* ASMR. Real squishies make no notes at all: what a close microphone hears is soft, irregular noise. So nothing here uses a tone.
-   Every sound is a cloud of short noise grains with random timing, pitch and loudness, kept dry (no echo).
-   The nine voices are meant to be told apart with eyes shut, so each lives in its own part of the spectrum and has its own length and rhythm:
-   gel = slow deep gloop, jelly = bright wet smack with a suction pop, bubble = tiny rising blips, pop = quiet press then a sticky peel,
-   chime = gel with a fine sandy shimmer (the name is old), crunch = hard little bead clacks, snow = one long dense crackle,
-   slow = foam breathing out and slowly back in, squeak = rubber skin rubbing.
-   ph is 'in' (pressed), 'out' (let go) or 'tick' (a little more of the same while the finger drags, so the sound follows the hand).
-   AF shifts every pitch a little per squish, so two squishes with the same voice still differ. */
+/* Sound. Nothing here uses a tone: every sound is short noise grains with a little random timing, pitch and loudness, kept dry.
+   The grain pieces below were written for the squishy toys this place used to hold; the keyboards and Pet World use them now.
+   AF shifts the pitch of whatever is played next. */
 let AF=1;
 function aThud(t,g){N({t,type:'lowpass',f:rand(95,170)*(.7+.3*AF),d:rand(.08,.15),a:.014,g:g*9,q:.8});}
 function aWet(t,n,g,span,lo,hi,d0,d1){for(let i=0;i<n;i++){const f=rand(lo,hi)*AF;N({t:t+Math.random()*span,type:'bandpass',f,f2:f*rand(.6,1.7),q:rand(1.8,4.2),d:rand(d0||.05,d1||.14),a:rand(.008,.03),g:g*rand(2,4)});}}
@@ -1654,74 +1666,62 @@ function aTick(t,n,g,span,lo,hi,pw){for(let i=0;i<n;i++)N({t:t+span*Math.pow(Mat
 function aClack(t,n,g,span){for(let i=0;i<n;i++)N({t:t+span*Math.pow(Math.random(),1.6),type:'bandpass',f:rand(900,3200)*AF,q:rand(4,8),d:rand(.006,.016),a:.0008,g:g*rand(2,5)});}
 function aAir(t,d,g,f,f2){N({t,type:'bandpass',f:f*AF,f2:f2*AF,q:.6,d,a:d*.35,g:g*2.5});}
 function aCreak(t,dur,g,f){let x=0;const r=rand(35,60),r1=r*rand(1.4,2.4);while(x<dur){N({t:t+x,type:'bandpass',f:f*AF*rand(.93,1.07),q:6,d:.006,a:.001,g:g*rand(4,7)});x+=rand(.85,1.15)/(r+(r1-r)*x/dur);}}
-function sqSnd(s,ph){const i=ph==='in',o=ph==='out',c=SQS.cur;AF=c?.82+.4*sr(SQ.indexOf(c)+3):1;
-  if(s==='gel'){
-    if(i){aThud(0,.6);aWet(0,4,.9,.12,220,700,.12,.3);aBlub(.1,2,.8,.2);}else if(o){aBlub(0,2,.8,.12);aWet(0,2,.6,.1,240,700,.08,.18);}else{aWet(0,1,.6,.02,220,700,.08,.16);if(Math.random()<.25)aBlub(0,1,.6,0);}}
-  else if(s==='jelly'){
-    if(i){aThud(0,.4);aWet(0,9,.38,.2,500,1800,.03,.07);aTick(0,6,.12,.2,2000,5000);}else if(o){N({type:'lowpass',f:300*AF,f2:900*AF,d:.05,a:.004,g:2.4,q:2});aWet(.03,4,.28,.1,600,2000,.03,.06);}else aWet(0,2,.4,.03,500,1800,.03,.06);}
-  else if(s==='bubble'){
-    if(i){aThud(0,.35);aDrop(0,7,.65,.3);}else if(o)aDrop(0,4,.55,.2);else aDrop(0,Math.random()<.5?2:1,.6,.04);}
-  else if(s==='pop'){
-    if(i){aThud(0,.45);aWet(0,2,.3,.08,300,700);}else if(o){aTick(0,10,.26,.28,1200,3800,.5);N({t:.29,type:'lowpass',f:480*AF,f2:220*AF,d:.045,a:.002,g:2.2,q:1.2});}else aTick(0,2,.4,.04,1200,3800);}
-  else if(s==='crunch'){
-    if(i){aThud(0,.4);aClack(0,16,.6,.3);aTick(0,10,.28,.3,3000,8000);}else if(o)aClack(0,7,.42,.25);else aClack(0,3,.5,.05);}
-  else if(s==='snow'){
-    if(i){aThud(0,.4);aTick(0,45,.42,.4,300,2600,1.7);aAir(0,.3,.09,1800,600);}else if(o)aTick(0,14,.24,.3,300,2600);else aTick(0,7,.36,.06,300,2600);}
-  else if(s==='slow'){
-    if(i){aAir(0,.75,.19,3200,700);aAir(0,.4,.1,900,400);aThud(0,.2);aTick(0,6,.04,.5,3500,8000);}else if(o){aAir(0,1.7,.11,500,2400);aTick(.2,8,.035,1.3,3000,7000);}else aAir(0,.2,.12,rand(1000,2400),rand(800,2000));}
-  else if(s==='squeak'){
-    if(i){aThud(0,.4);aCreak(0,.22,.42,rand(1000,1600));}else if(o)aCreak(0,.14,.24,rand(1400,2200));else if(Math.random()<.5)aCreak(0,.07,.4,rand(1000,1900));else aAir(0,.08,.06,2500,2000);}
-  else{
-    if(i){aThud(0,.35);aWet(0,2,.45,.12,250,600,.08,.16);aTick(0,40,.17,.4,5500,12000);}else if(o)aTick(0,18,.13,.35,5500,12000);else aTick(0,7,.16,.06,5500,12000);}}
-function sqStep(dt){const V=SV,f=FEEL[SQS.cur?SQS.cur.k:'jelly'],k=V.held?300:f[0],c=V.held?28:f[1],n=Math.ceil(dt/.012),h=dt/n;
-  for(let i=0;i<n;i++)for(const a of ['sq','wx','wz','lx','lz']){const g=V.held?V['t'+a]:0;V['v'+a]+=((g-V[a])*k-V['v'+a]*c)*h;V[a]+=V['v'+a]*h;}
-  const sq=clamp(V.sq,-.95,.74),sy=1-sq,b=Math.min(1.75,1/Math.sqrt(sy)),wx=Math.max(-.4,V.wx),wz=Math.max(-.4,V.wz);
-  ST.x=Math.min(2.1,b*(1+wx));ST.z=Math.min(2.1,b*(1+wz));ST.y=sy/(1+(wx+wz)*.3);ST.lx=V.lx;ST.lz=V.lz;
-  ST.eye=((SQS.t%3.4)<.12?.15:1)*(1-clamp(sq*1.5,0,.7));}
-function sqView(id,mode){SQS.cur=id?SQI[id]:null;SQS.mode=mode||'view';for(const a in SV)SV[a]=a==='held'?false:0;SQS.idle=1.5;SQS.ya=.35;SQS.pid=null;SQS.parts.length=0;
+/* A key going down (dn) or coming back up, in one of seven switch voices. The space bar is deeper. No two strokes sound quite the same. */
+const KBG={thock:2.2,clicky:2.5,creamy:2.2,clack:2.4,bubble:1.7,type:1.6,marble:1.7};
+function kbSnd(v,dn,sp){AF=(sp?.66:1)*rand(.93,1.07);const g=(dn?1:.5)*(KBG[v]||1);
+  if(v==='clicky'){aTick(0,1,.9*g,0,3200,5200);if(dn)aTick(.014,1,.8*g,0,3800,6000);N({type:'bandpass',f:1500*AF,q:3,d:.03,a:.001,g:1.6*g});}
+  else if(v==='thock'){N({type:'lowpass',f:rand(430,560)*AF,d:.06,a:.001,g:8*g,q:2});aTick(0,1,.5*g,0,1500,2600);}
+  else if(v==='creamy'){N({type:'bandpass',f:rand(700,950)*AF,q:2.5,d:.045,a:.001,g:4*g});N({type:'lowpass',f:320*AF,d:.04,a:.001,g:4*g});}
+  else if(v==='clack'){N({type:'bandpass',f:rand(1900,2500)*AF,q:6,d:.035,a:.0008,g:5*g});aTick(0,1,.5*g,0,4000,6500);}
+  else if(v==='bubble'){aDrop(0,1,.7*g,0);N({type:'lowpass',f:420*AF,d:.05,a:.004,g:5*g});}
+  else if(v==='type'){N({type:'bandpass',f:rand(2600,3000)*AF,q:14,d:.09,a:.0008,g:7*g});N({type:'lowpass',f:500*AF,d:.05,a:.001,g:6*g});aTick(0,1,.6*g,0,3000,5000);}
+  else{N({type:'bandpass',f:rand(4200,5200)*AF,q:10,d:.05,a:.0006,g:7*g});N({type:'lowpass',f:700*AF,d:.03,a:.001,g:3*g});}}
+function sqStep(dt){for(let j=0;j<KEYS.length;j++){const g=KB.tg[j]>0?1:0;KB.d[j]+=(g-KB.d[j])*Math.min(1,dt*(g?45:18));}
+  KB.drop*=Math.pow(.0008,dt);while(KB.ev.length&&SQS.t-KB.ev[0].t>1.2)KB.ev.shift();}
+function sqView(id,mode){SQS.cur=id?SQI[id]:null;SQS.mode=mode||'view';sqRest();SQS.idle=0;SQS.ya=0;SQS.pi=.9;SQS.pid=null;SQS.parts.length=0;
   document.body.classList.add('sqv');$('sq').classList.add('view');sqVUI();}
-function sqBack(){document.body.classList.remove('sqv');$('sq').classList.remove('view');SQS.mode='';SQS.op=null;SV.held=false;sqTab();}
+function sqBack(){document.body.classList.remove('sqv');$('sq').classList.remove('view');SQS.mode='';SQS.op=null;sqRest();sqTab();}
 function sqOwned(){return SQ.filter(d=>G.sq[d.id]);}
 function sqVUI(){const d=SQS.cur,op=SQS.op,n=$('sqVn'),b=$('sqVb');b.innerHTML='';$('sqVg').textContent=GEM+' '+gb();
   const btn=(tx,fn)=>{const e=document.createElement('button');e.className='sqb';e.textContent=tx;e.addEventListener('click',fn);b.appendChild(e);};
   if(op&&!op.done){n.innerHTML='<strong>???</strong><em>'+op.cap.n+'</em>';$('sqVh').textContent='What is inside?';$('sq').style.setProperty('--tg','#ffffff88');return;}
   const T=SQT[d.t],c=G.sq[d.id]||0;
-  n.innerHTML='<strong>'+d.n+'</strong><small style="background:'+T[1]+'">'+T[0]+'</small><em>'+(op?(op.isNew?'NEW!':'You have '+c+' now'):(c>1?'x'+c:''))+'</em>';
+  n.innerHTML='<strong>'+d.n+'</strong><small style="background:'+T[1]+'">'+T[0]+'</small><em>'+KBN[d.s]+' keys'+(op?(op.isNew?' \u00B7 NEW!':' \u00B7 you have '+c+' now'):(c>1?' \u00B7 x'+c:''))+'</em>';
   n.classList.remove('pop');if(op){void n.offsetWidth;n.classList.add('pop');}
-  $('sq').style.setProperty('--tg',T[1]+'55');$('sqVh').textContent='Press to squish · Pull to stretch · Drag around it to spin';
-  if(op){const cp=op.cap;if(gb()>=cp.g)btn('Open another '+GEM+' '+cp.g,()=>sqOpen(cp));btn('My Squishes',()=>{SQS.tab='mine';sqBack();});}
+  $('sq').style.setProperty('--tg',T[1]+'55');$('sqVh').textContent='Tap the keys! \u00B7 Slide to play many \u00B7 Drag beside it to spin';
+  if(op){const cp=op.cap;if(gb()>=cp.g)btn('Open another '+GEM+' '+cp.g,()=>sqOpen(cp));btn('My Keyboards',()=>{SQS.tab='mine';sqBack();});}
   else{const L=sqOwned();if(L.length>1){const i=L.indexOf(d);btn('◀',()=>sqView(L[(i+L.length-1)%L.length].id));btn('▶',()=>sqView(L[(i+1)%L.length].id));}}}
-/* Mystery capsule: the squish is rolled, added and saved first, then the capsule shakes and pops open. */
+/* Mystery capsule: the keyboard is rolled, added and saved first, then the capsule shakes and pops open. */
 function sqOpen(cap,free){if(free){if(G.sqw)return;G.sqw=1;}else{if(gb()<cap.g)return;G.gsp+=cap.g;}
   let r=Math.random()*100,t=0;for(let i=0;i<7;i++){r-=cap.p[i];if(r<0){t=i+1;break;}}if(!t)t=2;
   const L=SQ.filter(s=>s.t===t),d=L[(Math.random()*L.length)|0],isNew=!G.sq[d.id];G.sq[d.id]=(G.sq[d.id]||0)+1;sqSave();
-  SQS.op={t:0,d,cap,isNew,done:false};SQS.rat=0;sqView(null,'open');SQS.idle=0;SQS.pi=.22;}
-function sqReveal(){const op=SQS.op,d=op.d;op.done=true;SQS.cur=d;SV.sq=-.6;SV.vsq=3;SQS.idle=0;SQS.ya=.35;
-  const cols=d.t>=5?CONF:[[1,1,1],op.cap.col,[1,.9,.5]];for(let i=0;i<26+d.t*5;i++){const a=rand(0,6.283),s=rand(1.5,4.5);SQS.parts.push({x:0,y:.7,z:0,vx:Math.cos(a)*s,vy:rand(2,6.5),vz:Math.sin(a)*s,l:rand(.7,1.5),c:cols[(Math.random()*cols.length)|0]});}
-  sqSnd('jelly','out');if(d.t>=5){SFX.clear();setTimeout(()=>SFX.mile(),500);}else if(d.t>=3)SFX.mile();else SFX.buy();sqVUI();}
+  SQS.op={t:0,d,cap,isNew,done:false};SQS.rat=0;sqView(null,'open');}
+function sqReveal(){const op=SQS.op,d=op.d;op.done=true;SQS.cur=d;KB.drop=2.2;SQS.idle=0;SQS.ya=0;
+  const cols=d.t>=5?CONF:[[1,1,1],op.cap.col,[1,.9,.5]];for(let i=0;i<26+d.t*5;i++){const a=rand(0,6.283),s=rand(1.5,4.5);SQS.parts.push({x:0,y:.9,z:0,vx:Math.cos(a)*s*1.6,vy:rand(3,8),vz:Math.sin(a)*s*1.6,l:rand(.7,1.5),c:cols[(Math.random()*cols.length)|0]});}
+  kbSnd('thock',true,1);if(d.t>=5){SFX.clear();setTimeout(()=>SFX.mile(),500);}else if(d.t>=3)SFX.mile();else SFX.buy();sqVUI();}
 function sqFrame(dt){SQS.t+=dt;if(SQS.mode!=='view'&&SQS.mode!=='open')return;const t=SQS.t,asp=cv.width/cv.height,op=SQS.op;
   gl.viewport(0,0,cv.width,cv.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.depthMask(true);
-  SQS.idle+=dt;if(SQS.idle>3&&!SV.held)SQS.ya+=dt*.45;
-  SQS.dist=Math.max(4.6,3.4/(asp*1.12));sqCam(SQS.ya,SQS.pi,SQS.dist,asp,.62);
-  if(op&&!op.done){op.t+=dt;const k=Math.min(1,op.t/1.25);sqRest();ST.lx=Math.sin(op.t*34)*.16*k;ST.y=1+Math.sin(op.t*21)*.06*k;ST.x=ST.z=1/Math.sqrt(ST.y);
-    q(SPH,0,.62,0,1.24,1.24,1.24,op.cap.col,.2);q(SPH,0,.62,0,1.3,.12,1.3,[1,1,1],.2);q(SPH,0,1.26,0,.3,.14,.3,[1,1,1],.2);q(SPH,-.24,.92,.4,.2,.12,.08,[1,1,1],.7);sqFlush();
+  SQS.idle+=dt;if(SQS.idle>7)SQS.ya+=dt*.35;
+  SQS.dist=Math.max(6.6,6.5/asp);sqCam(SQS.ya,SQS.pi,SQS.dist,asp,.3);
+  if(op&&!op.done){op.t+=dt;const k=Math.min(1,op.t/1.25);ST.ox=Math.sin(op.t*34)*.22*k;ST.oy=Math.abs(Math.sin(op.t*21))*.12*k;ST.oz=0;ST.s=1.9;
+    q(SPH,0,.62,0,1.24,1.24,1.24,op.cap.col,.2);q(SPH,0,.62,0,1.3,.12,1.3,[1,1,1],.2);q(SPH,0,1.26,0,.3,.14,.3,[1,1,1],.2);q(SPH,-.24,.92,.4,.2,.12,.08,[1,1,1],.7);ST.ox=ST.oy=0;ST.s=1;sqFlush();
     if(op.t>SQS.rat){SQS.rat=op.t+.2-.1*k;AF=1;aClack(0,3,.2+.15*k,.05);aThud(0,.2);}
     if(op.t>=1.3)sqReveal();}
   else if(SQS.cur){sqStep(dt);sqDraw(SQS.cur,t);}
-  for(let i=SQS.parts.length-1;i>=0;i--){const p=SQS.parts[i];p.l-=dt;if(p.l<=0){SQS.parts.splice(i,1);continue;}p.vy-=9*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;const s=.1*Math.min(1,p.l*2);D(SPH,p.x,p.y,p.z,s,s,s,p.c,.6);}}
-/* Touch in the viewer: a finger that lands on the squish squashes and pulls it, a finger beside it turns the camera. */
-function sqDown(e){if(e.target.closest('button')||SQS.pid!==null||(SQS.op&&!SQS.op.done))return;initAudio();SQS.pid=e.pointerId;SQS.x0=SQS.lx=e.clientX;SQS.y0=SQS.ly=e.clientY;SQS.idle=0;
-  const cw=VP[7]*.62+VP[15],px=((VP[4]*.62+VP[12])/cw*.5+.5)*VWid,py=(1-((VP[5]*.62+VP[13])/cw*.5+.5))*VHei,r=(.92/(SQS.dist*Math.tan(20*Math.PI/180)))*VHei/2;
-  if(Math.hypot(e.clientX-px,e.clientY-py)<r){SQS.pm='sq';SV.held=true;SV.tsq=.36;SV.twx=SV.twz=SV.tlx=SV.tlz=0;SQS.acc=0;sqSnd(SQS.cur.s,'in');}else SQS.pm='rot';
+  for(let i=SQS.parts.length-1;i>=0;i--){const p=SQS.parts[i];p.l-=dt;if(p.l<=0){SQS.parts.splice(i,1);continue;}p.vy-=9*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;const s=.17*Math.min(1,p.l*2);D(SPH,p.x,p.y,p.z,s,s,s,p.c,.6);}}
+/* Touch in the viewer: a finger on a key presses it (several fingers can play at once, and sliding runs across the keys); a finger beside the keyboard turns the camera. */
+function kbHit(x,y){let b=-1,bd=1e9;const yy=KB.drop+.66;for(let j=0;j<KEYS.length;j++){const k=KEYS[j],n=k.sp?5:1;for(let u=0;u<n;u++){const kx=k.x+(n>1?(u-2)*.5:0),a=pwProj(kx,yy,k.z),c=pwProj(kx+.3,yy,k.z),e=pwProj(kx,yy,k.z+.3);
+    const r=Math.max(Math.hypot(c[0]-a[0],c[1]-a[1]),Math.hypot(e[0]-a[0],e[1]-a[1]),15)*1.15,dd=Math.hypot(x-a[0],y-a[1])/r;if(dd<1&&dd<bd){bd=dd;b=j;}}}return b;}
+function kbPress(j){KB.tg[j]++;KB.ev.push({i:j,t:SQS.t});if(KB.ev.length>14)KB.ev.shift();{const k=KEYS[j],d=SQS.cur,c=d.t>=5?hsv(k.x*.12+k.z*.07-SQS.t*.25,.6,1):hsv(sr(SQ.indexOf(d)+1),.6,1);for(let i=0;i<5;i++)SQS.parts.push({x:k.x+rand(-.3,.3)*(k.sp?4:1),y:.8,z:k.z,vx:rand(-.8,.8),vy:rand(2.5,4.5),vz:rand(-.8,.8),l:rand(.3,.55),c});}kbSnd(SQS.cur.s,true,KEYS[j].sp);}
+function kbRel(j){KB.tg[j]=Math.max(0,KB.tg[j]-1);kbSnd(SQS.cur.s,false,KEYS[j].sp);}
+function sqDown(e){if(e.target.closest('button')||!SQS.cur||(SQS.op&&!SQS.op.done))return;initAudio();SQS.idle=0;const j=kbHit(e.clientX,e.clientY);
+  if(j>=0){KB.ptr[e.pointerId]=j;kbPress(j);}else if(SQS.pid===null){SQS.pid=e.pointerId;SQS.lx=e.clientX;SQS.ly=e.clientY;}else return;
   try{$('sqV').setPointerCapture(e.pointerId);}catch(_){}}
-function sqMove(e){if(e.pointerId!==SQS.pid)return;SQS.idle=0;
-  if(SQS.pm==='rot'){SQS.ya-=(e.clientX-SQS.lx)*.011;SQS.pi=clamp(SQS.pi+(e.clientY-SQS.ly)*.008,-.25,1.25);}
-  else{const m=Math.min(VWid,VHei),dx=(e.clientX-SQS.x0)/(m*.3),dy=(e.clientY-SQS.y0)/(m*.3),w=Math.min(.85,Math.abs(dx)*.7),c=Math.cos(SQS.ya),s=Math.sin(SQS.ya),ln=clamp(dx*.4,-.6,.6);
-    SV.tsq=clamp(.36+dy*.9-w*.35,-.85,.72);SV.twx=w*Math.abs(c);SV.twz=w*Math.abs(s);SV.tlx=ln*c;SV.tlz=-ln*s;
-    SQS.acc+=Math.hypot(e.clientX-SQS.lx,e.clientY-SQS.ly)/m;if(SQS.acc>.04&&SQS.t-SQS.tk>.045){SQS.acc=0;SQS.tk=SQS.t;sqSnd(SQS.cur.s,'tick');}}
-  SQS.lx=e.clientX;SQS.ly=e.clientY;}
-function sqUp(e){if(e.pointerId!==SQS.pid)return;SQS.pid=null;if(SQS.pm==='sq'){SV.held=false;sqSnd(SQS.cur.s,'out');}SQS.pm='';}
-/* Friends: each keeps its own little collection in the save (G.sqf). They restock when they run low. */
+function sqMove(e){const id=e.pointerId;SQS.idle=0;
+  if(id in KB.ptr){const j=kbHit(e.clientX,e.clientY),c=KB.ptr[id];if(j>=0&&j!==c){kbRel(c);KB.ptr[id]=j;kbPress(j);}}
+  else if(id===SQS.pid){SQS.ya-=(e.clientX-SQS.lx)*.011;SQS.pi=clamp(SQS.pi+(e.clientY-SQS.ly)*.008,.12,1.35);SQS.lx=e.clientX;SQS.ly=e.clientY;}}
+function sqUp(e){const id=e.pointerId;if(id in KB.ptr){kbRel(KB.ptr[id]);delete KB.ptr[id];}if(id===SQS.pid)SQS.pid=null;}
+/* Friends: each keeps its own little collection of keyboards in the save (G.sqf). They restock when they run low. */
 /* Saving from here must not go through save(): outside a stage that would write stage 1 over the player's real progress. Only the squish fields and the gems spent are written. */
 function sqSave(){const p=me();if(!p)return;p.gsp=G.gsp;p.sq=G.sq;p.sqf=G.sqf;p.sqo=G.sqo;p.sqn=G.sqn;p.sqw=G.sqw;plSave();}
 function frAdd(f){const lo=f.t[0],hi=f.t[1],t=lo+Math.floor(Math.pow(Math.random(),1.8)*(hi-lo+1)),L=SQ.filter(s=>s.t===t),d=L[(Math.random()*L.length)|0],v=G.sqf[f.id];v[d.id]=(v[d.id]||0)+1;}
@@ -1733,7 +1733,7 @@ function sqInit(){if(!G.sq||typeof G.sq!=='object')G.sq={};if(!G.sqf||typeof G.s
     else{const v=G.sqf[f.id];for(const k in v)if(!SQI[k]||!(v[k]>0))delete v[k];frStock(f);}}sqSave();}
 const sqVal=L=>L.reduce((a,id)=>a+SQV[SQI[id].t],0);
 const left=(v,L,id)=>(v[id]||0)-L.filter(x=>x===id).length;
-/* The best one or two of a friend's squishes worth no more than budget (a little slack allowed). Ones the player does not have yet win ties. */
+/* The best one or two of a friend's keyboards worth no more than budget (a little slack allowed). Ones the player does not have yet win ties. */
 function trPick(f,budget){const v=G.sqf[f.id],ids=[];for(const k in v)for(let i=0;i<Math.min(2,v[k]);i++)ids.push(k);let best=[],bv=0;const cap=budget*1.06+.01;
   const sc=L=>sqVal(L)+L.filter(id=>!G.sq[id]).length*.01;
   for(let i=0;i<ids.length;i++){const a=[ids[i]];if(sqVal(a)<=cap&&sc(a)>bv){bv=sc(a);best=a;}
@@ -1741,7 +1741,7 @@ function trPick(f,budget){const v=G.sqf[f.id],ids=[];for(const k in v)for(let i=
   return best;}
 function trThink(){const R=TDE,f=FRI[R.f];R.ok=false;R.busy=true;R.say='Hmm, let me think...';trDraw();clearTimeout(R.tm);
   R.tm=setTimeout(()=>{if(TDE!==R)return;R.busy=false;const mv=sqVal(R.mine);
-    if(!R.mine.length){if(R.auto)R.theirs=[];R.say=R.theirs.length?'What will you give me for '+(R.theirs.length>1?'these':'this one')+'?':'Tap Add mine and pick a squish to trade!';}
+    if(!R.mine.length){if(R.auto)R.theirs=[];R.say=R.theirs.length?'What will you give me for '+(R.theirs.length>1?'these':'this one')+'?':'Tap Add mine and pick a keyboard to trade!';}
     else{if(R.auto)R.theirs=trPick(f,mv/f.g);const tv=sqVal(R.theirs);
       if(!R.theirs.length)R.say='I have nothing that small. Add a little more!';
       else{const r=mv/(tv*f.g);
@@ -1749,7 +1749,7 @@ function trThink(){const R=TDE,f=FRI[R.f];R.ok=false;R.busy=true;R.say='Hmm, let
         else if(r>=.97){R.ok=true;R.say=r>1.5?'Wow, yes please! Tap Accept!':'Deal! Tap Accept!';}
         else if(r>=.5)R.say='Hmm... add a little more!';else R.say='No way! Mine is way more rare!';}}
     if(SQS.tab==='trade'&&SQS.mode==='')trDraw();if(R.ok)SFX.coin(3);else SFX.keyUp();},650);}
-function trOpen(fid,o){TDE={f:fid,mine:[],theirs:[],auto:true,ok:false,busy:false,req:null,pick:'mine',say:'Hi! Tap Add mine and pick a squish to trade!',tm:0};
+function trOpen(fid,o){TDE={f:fid,mine:[],theirs:[],auto:true,ok:false,busy:false,req:null,pick:'mine',say:'Hi! Tap Add mine and pick a keyboard to trade!',tm:0};
   if(o){TDE.mine=o.want.slice();TDE.theirs=o.give.slice();TDE.auto=false;TDE.ok=true;TDE.req=o;TDE.say='Hi! Want to trade? Tap Accept or Decline!';}
   SFX.keyUp();trDraw();$('sqL').scrollTop=0;}
 function trAccept(){const R=TDE;if(!R||!R.ok||R.busy)return;const v=G.sqf[R.f];
@@ -1758,7 +1758,7 @@ function trAccept(){const R=TDE;if(!R||!R.ok||R.busy)return;const v=G.sqf[R.f];
   if(R.req)G.sqo=G.sqo.filter(o=>o!==R.req);frStock(FRI[R.f]);
   R.mine=[];R.theirs=[];R.auto=true;R.ok=false;R.req=null;R.say='Yay, thank you! Want to trade more?';sqSave();SFX.clear();trDraw();}
 function trDecline(){const R=TDE;if(!R)return;clearTimeout(R.tm);if(R.req){G.sqo=G.sqo.filter(o=>o!==R.req);sqSave();}TDE=null;SFX.keyUp();sqTab();}
-/* Now and then a friend asks for a trade: one squish of the player's for one or two of theirs. At most three wait at a time. */
+/* Now and then a friend asks for a trade: one keyboard of the player's for one or two of theirs. At most three wait at a time. */
 function sqOffers(){G.sqo=G.sqo.filter(o=>o&&FRI[o.f]&&o.want.every(id=>left(G.sq,[],id)>0)&&o.give.every(id=>left(G.sqf[o.f],[],id)>0));
   const mine=Object.keys(G.sq);if(!mine.length||G.sqo.length>=3||Date.now()<(G.sqn||0))return;
   const fs=FR.filter(f=>!G.sqo.some(o=>o.f===f.id));if(!fs.length)return;const dup=mine.filter(id=>G.sq[id]>1);
@@ -1769,22 +1769,22 @@ function sqCell(id,n,cls,fn){const d=SQI[id],T=SQT[d.t],b=document.createElement
   b.innerHTML='<img alt="" src="'+SQTH[id]+'"><strong>'+(cls==='no'?'???':d.n)+'</strong><small>'+T[0]+'</small>'+(n>1?'<i>x'+n+'</i>':'');if(fn)b.addEventListener('click',fn);return b;}
 function sqEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
 function sqRow(ic,name,desc,label,cls,fn){const d=sqEl('div','sqrow',ic+'<div><strong>'+name+'</strong><span>'+desc+'</span></div>');if(label){const b=sqEl('button',cls||'',label);b.addEventListener('click',fn);d.appendChild(b);}return d;}
-const SQTABS=[['mine','🍡','My Squishes'],['get','🎁','Get'],['trade','🤝','Trade']];
+const SQTABS=[['mine','\u2328\uFE0F','My Keyboards'],['get','🎁','Get'],['trade','🤝','Trade']];
 function sqTab(){const L=$('sqL'),tab=SQS.tab,T=$('sqT');$('sqG').textContent=GEM+' '+gb();T.innerHTML='';
   if(tab==='trade')sqOffers();
   for(const t of SQTABS){const b=sqEl('button','tab'+(t[0]===tab?' sel':''),'<b>'+t[1]+'</b>'+t[2]);if(t[0]==='trade'&&G.sqo.length){b.appendChild(sqEl('i','',''+G.sqo.length));}
     b.addEventListener('click',()=>{if(SQS.tab===t[0]&&!(t[0]==='trade'&&TDE))return;SQS.tab=t[0];if(TDE){clearTimeout(TDE.tm);TDE=null;}SFX.keyUp();sqTab();L.scrollTop=0;});T.appendChild(b);}
   if(tab==='trade'&&TDE){trDraw();return;}
   L.innerHTML='';
-  if(tab==='mine'){const n=sqOwned().length;L.appendChild(sqEl('div','sqcap',n?'You have '+n+' of '+SQ.length+' squishes. Tap one to play with it!':'No squishes yet. Open a mystery capsule in Get!'));
+  if(tab==='mine'){const n=sqOwned().length;L.appendChild(sqEl('div','sqcap',n?'You have '+n+' of '+SQ.length+' keyboards. Tap one to type on it!':'No keyboards yet. Open a mystery capsule in Get!'));
     const g=sqEl('div','sqgrid');for(const d of SQ){const c=G.sq[d.id]||0;g.appendChild(c?sqCell(d.id,c,'',()=>{SFX.keyUp();sqView(d.id);}):sqCell(d.id,0,'no'));}L.appendChild(g);}
-  else if(tab==='get'){L.appendChild(sqEl('div','sqcap','Every capsule hides a mystery squish. Bigger capsules are luckier! Find gems in Tippy Tap stages.'));
-    if(!G.sqw)L.appendChild(sqRow('<i class="capi" style="--cc:#9be38f"></i>','Welcome Capsule','A free mystery squish to start your collection!','FREE','ok',()=>sqOpen(CAPS[0],true)));
+  else if(tab==='get'){L.appendChild(sqEl('div','sqcap','Every capsule hides a mystery keyboard. Bigger capsules are luckier! Find gems in Tippy Tap stages.'));
+    if(!G.sqw)L.appendChild(sqRow('<i class="capi" style="--cc:#9be38f"></i>','Welcome Capsule','A free mystery keyboard to start your collection!','FREE','ok',()=>sqOpen(CAPS[0],true)));
     for(const c of CAPS){const can=gb()>=c.g;let od='';for(let i=0;i<7;i++)if(c.p[i])od+='<em style="background:'+SQT[i+1][1]+'">'+SQT[i+1][0]+' '+c.p[i]+'%</em>';
       L.appendChild(sqRow('<i class="capi" style="--cc:'+c.cc+'"></i>',c.n,'<span class="odds">'+od+'</span>',can?GEM+' '+c.g:'Need '+(c.g-gb())+' '+GEM,can?'':'no',()=>sqOpen(c)));}}
-  else{const have=Object.keys(G.sq).length;L.appendChild(sqEl('div','sqcap',have?'Pick a friend, add squishes, then Accept or Decline.':'Get a squish first, then trade it with friends!'));
+  else{const have=Object.keys(G.sq).length;L.appendChild(sqEl('div','sqcap',have?'Pick a friend, add keyboards, then Accept or Decline.':'Get a keyboard first, then trade it with friends!'));
     for(const o of G.sqo){const f=FRI[o.f];L.appendChild(sqRow('<b>'+f.e+'</b>',f.n+' wants to trade!','Wants your '+o.want.map(i=>SQI[i].n).join(', ')+' · Gives '+o.give.map(i=>SQI[i].n).join(' + '),'View','ok',()=>trOpen(o.f,o)));}
-    for(const f of FR)L.appendChild(sqRow('<b>'+f.e+'</b>',f.n,f.d+' · '+invN(G.sqf[f.id])+' squishes','Trade',have?'':'no',()=>{if(have)trOpen(f.id);}));}}
+    for(const f of FR)L.appendChild(sqRow('<b>'+f.e+'</b>',f.n,f.d+' \u00B7 '+invN(G.sqf[f.id])+' keyboards','Trade',have?'':'no',()=>{if(have)trOpen(f.id);}));}}
 function trDraw(){const R=TDE,f=FRI[R.f],L=$('sqL'),keep=L.scrollTop,fv=G.sqf[R.f];L.innerHTML='';
   const top=sqEl('div','trtop','<b>'+f.e+'</b><div class="trsay">'+R.say+'</div>');L.appendChild(top);
   const side=(title,list,mine)=>{const s=sqEl('div','trside','<span>'+title+'</span>'),g=sqEl('div','trslots');
@@ -1810,11 +1810,11 @@ $('bSqX').addEventListener('click',()=>{if(TDE){clearTimeout(TDE.tm);TDE=null;}g
    so nothing here can be reached on the deployed game. The preview has its own storage, so this never touches a real save. */
 if(!/(^|\.)github\.io$|(^|\.)vercel\.app$/.test(location.hostname)){$('tst').style.display='';
   const need=fn=>()=>{if(!me()){showName(()=>{fn();goHome();},'home');return;}fn();goHome();};
-  $('bTsSq').addEventListener('click',need(()=>{sqInit();for(const d of SQ)G.sq[d.id]=Math.max(2,G.sq[d.id]||0);sqSave();toast('All squishes unlocked!');}));
+  $('bTsSq').addEventListener('click',need(()=>{sqInit();for(const d of SQ)G.sq[d.id]=Math.max(2,G.sq[d.id]||0);sqSave();toast('All keyboards unlocked!');}));
   $('bTsPet').addEventListener('click',need(()=>{const p=me();for(const g of GEAR)if(g.pet&&G.own.indexOf(g.id)<0)G.own.push(g.id);p.own=G.own;plSave();toast('All pets are here!');}));
   $('bTsGem').addEventListener('click',need(()=>{const p=me();G.gems+=50;p.gem=G.gems;plSave();toast('+50 gems');}));
   $('bTsCoin').addEventListener('click',need(()=>{const p=me();G.coins=(p.coins||0)+10000;p.coins=G.coins;plSave();hud();toast('+10000 coins');}));}
-window.__sq={SQ,SQS,SV,CAPS,snd:sqSnd,get T(){return TDE;}};
+window.__sq={SQ,SQS,KB,KEYS,CAPS,snd:kbSnd,hit:kbHit,get T(){return TDE;}};
 
 /* ====================== Pet World ======================
    A yard where every pet bought in the Shop walks about. One pet is picked (tap it) and cared for: feed, play fetch, wash, cuddle.
