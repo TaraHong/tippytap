@@ -18,6 +18,7 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-23
+- **스테이지 시작 화면 정리**: 아이템이 많아도 제목과 GO, Shop·Change Buddy·Home 버튼이 화면 밖으로 밀리지 않습니다. 아이템 칩이 작아져 한 줄에 5개씩 보이고, 넘치면 칩 부분만 스크롤됩니다.
 - **처음 하는 친구를 위한 안내**: 1스테이지를 처음 하면 손가락 그림이 움직이기 → 점프 → 코인과 Shop 순서로 알려 줍니다. 한 번 깨고 나면 다시 나오지 않습니다.
 - **조이스틱 고정**: 화면 왼쪽 어디를 눌러도 조이스틱이 원래 자리에 그대로 있습니다(전에는 손가락 자리로 옮겨 갔음).
 - **친구에게 보내기**: 첫 화면의 "Share this game"과 클리어 화면의 "Send to a friend"로 게임 주소를 보냅니다.

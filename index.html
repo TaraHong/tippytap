@@ -128,6 +128,26 @@ body.tu0 #joy,body.tu1 #jump,body.tu2 #coinp{animation:tglow 1s infinite}
 .chip{pointer-events:auto;font:inherit;font-weight:900;font-size:14px;color:#2b2a5a;background:rgba(255,255,255,.88);border:3px solid transparent;border-radius:18px;padding:7px 10px;display:flex;flex-direction:column;align-items:center;min-width:74px;text-shadow:none}
 .chip b{font-size:30px;line-height:1.15}
 .chip.sel{background:#ffe98a;border-color:#fff;box-shadow:0 0 0 3px #ff9f43;transform:translateY(-3px)}
+#ready{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:calc(14px + var(--sat)) calc(16px + var(--sar)) calc(14px + var(--sab)) calc(16px + var(--sal))}
+#ready>*{flex:none}
+#ready>:first-child{margin-top:auto}
+#ready>:last-child{margin-bottom:auto}
+#ready h2{font-size:clamp(26px,8vw,38px);margin:0 0 4px}
+#ready p{margin:3px 0;font-size:15px;line-height:1.3}
+#ready .lbl{margin-top:4px}
+#rdTr{flex:0 1 auto;min-height:66px;width:100%;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;pointer-events:auto;gap:6px;padding:6px 4px;margin:0;align-content:flex-start}
+#rdTr .chip{position:relative;width:clamp(58px,calc((100% - 24px)/5),78px);min-width:0;padding:4px 2px 5px;font-size:11px;line-height:1.1;border-radius:14px;border-width:2px}
+#rdTr .chip b{font-size:24px;line-height:1.2}
+#rdTr .chip.sel{transform:none;box-shadow:0 0 0 2px #ff9f43}
+#rdTr .chip i{position:absolute;right:-3px;top:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff4f9e;color:#fff;font-style:normal;font-size:11px;line-height:18px;padding:0 4px}
+#ready .btn{margin-top:8px}
+#ready .row{flex-wrap:nowrap;gap:8px}
+#ready .row .btn.alt{min-width:0;padding:10px 14px;font-size:15px;white-space:nowrap}
+#rdTr.more{-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent)}
+@media (max-height:430px){#rdW{display:none}#ready h2{font-size:26px;margin:0}#rdTw br{display:none}#rdTw b{margin-right:8px}#ready .lbl{margin-top:2px}
+#rdTr,#rdTr.more{flex:none;flex-wrap:nowrap;max-width:100%;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;justify-content:flex-start;-webkit-mask-image:none;mask-image:none}
+#rdTr .chip{flex:none;width:64px}#rdTr .chip:first-child{margin-left:auto}#rdTr .chip:last-child{margin-right:auto}
+#ready .btn{margin-top:4px;padding:8px 22px}#ready .row .btn.alt{padding:7px 14px}}
 .lbl{font-size:13px;font-weight:900;letter-spacing:2px;opacity:.9;margin-top:8px}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .row .btn.alt{min-width:130px}
@@ -1030,10 +1050,10 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
   $('rdW').textContent=G.stage>=4?'Watch out! Grumbles the grumpy cloud is chasing you. Keep moving!':(G.stage>=2?'Look for the blue zoom lanes. They make you super fast!':'Step on every key for +1 coin!');
   {const tw=G.W.tw,e=$('rdTw');e.style.display=tw?'':'none';if(tw)e.innerHTML='<b>'+TWS[tw].ic+' '+TWS[tw].n+'</b><br>'+TWS[tw].d;
     $('rdG').textContent=G.gift?'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.':GEM+' '+gb()+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
-  const box=$('rdTr');box.innerHTML='';
+  const box=$('rdTr'),sy=box.scrollTop;box.innerHTML='';
   if(!G.own.length)box.innerHTML='<p style="font-size:14px;margin:0">No trails yet. Buy one in the Shop!</p>';
   else{for(const g of GEAR){if(G.own.indexOf(g.id)<0)continue;const b=document.createElement('button');b.className='chip'+(wear(g.id)?' sel':'');
-    b.innerHTML='<b>'+g.ic+'</b>'+g.name.split(' ')[1]+(g.st?' \u00B7 '+G.gs[g.id]:'');
+    b.innerHTML='<b>'+g.ic+'</b>'+g.name.split(' ')[1]+(g.st?'<i>'+G.gs[g.id]+'</i>':'');
     b.addEventListener('click',()=>{gearTog(g);SFX.keyUp();save();showReady();});box.appendChild(b);}}
   for(const t of TR){if(G.own.indexOf(t.id)<0)continue;const b=document.createElement('button');b.className='chip'+(G.eq===t.id?' sel':'');
     b.innerHTML='<b>'+t.ic+'</b>'+t.name.replace(' Trail','');
@@ -1041,7 +1061,7 @@ function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rd
   const e=tr();$('rdE').textContent=e?('Equipped: '+e.name+' · '+e.desc):(G.own.length?'Tap a trail or gear to put it on. Tap again to take it off.':'');
   {const n=G.arm;$('rdA').textContent=n?SHIELD+' Armor ready: blocks '+n+' hit'+(n>1?'s':''):'';}
   {const n=G.rev+(G.revOn&&G.revS===G.stage?1:0);$('rdR').textContent=n?HEART+' Instant Revive ready for '+n+' stage'+(n>1?'s':''):'';}
-  show('ready');}
+  show('ready');box.scrollTop=sy;box.classList.toggle('more',box.scrollHeight>box.clientHeight+4);}
 function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
   $('pkG').textContent=GEM+' '+G.gems+' gems found so far \u00B7 Find one in every stage to unlock new buddies!';
   for(const c of CHARS){const lock=c[3]&&G.gems<c[3],b=document.createElement('button');b.className='chip'+(G.chr===c[0]?' sel':'');b.innerHTML='<b>'+(lock?'\uD83D\uDD12':c[2])+'</b>'+(lock?GEM+' '+c[3]:c[1]);if(lock)b.style.opacity=.75;
