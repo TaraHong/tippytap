@@ -3,6 +3,21 @@
 <head>
 <meta charset="utf-8">
 <title>Tippy Tap Escape</title>
+<meta name="description" content="A cozy 3D ASMR obstacle game for kids. Run, hop and dodge across clicky, crunchy worlds. Free, no ads, plays in your browser.">
+<link rel="canonical" href="https://tippytap-beta.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tippy Tap Escape">
+<meta property="og:title" content="Tippy Tap Escape: a cozy ASMR game for kids">
+<meta property="og:description" content="Run, hop and dodge across clicky, crunchy worlds. Free, no ads, plays in your browser.">
+<meta property="og:url" content="https://tippytap-beta.vercel.app/">
+<meta property="og:image" content="https://tippytap-beta.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A bunny hopping across giant keyboard keys in Tippy Tap Escape">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tippy Tap Escape: a cozy ASMR game for kids">
+<meta name="twitter:description" content="Run, hop and dodge across clicky, crunchy worlds. Free, no ads, plays in your browser.">
+<meta name="twitter:image" content="https://tippytap-beta.vercel.app/og.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -46,6 +61,21 @@ body{background:linear-gradient(180deg,var(--s1) 0%,var(--s2) 55%,var(--s3) 100%
   display:flex;align-items:center;justify-content:center;font-weight:900;font-size:21px;letter-spacing:1px;transition:transform .06s}
 #jump.on{transform:translateY(5px) scale(.95);box-shadow:0 1px 0 rgba(160,70,0,.55)}
 #fl{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+#tut{position:fixed;inset:0;z-index:6;pointer-events:none;display:none}
+#tut.on{display:block}
+#tutB{position:absolute;left:50%;top:calc(132px + var(--sat));transform:translateX(-50%);width:max-content;max-width:88vw;background:#fff;color:#2b2a5a;border:4px solid #ffb938;border-radius:24px;padding:10px 18px;font-weight:900;font-size:20px;line-height:1.25;text-align:center;box-shadow:0 6px 0 rgba(60,60,120,.45)}
+#tutH{position:absolute;font-size:56px;line-height:1;filter:drop-shadow(0 4px 4px rgba(0,0,0,.4))}
+#tut.s0 #tutH{left:calc(64px + var(--sal));bottom:calc(46px + var(--sab));animation:tdrag 1.3s ease-in-out infinite}
+#tut.s1 #tutH{right:calc(58px + var(--sar));bottom:calc(40px + var(--sab));animation:ttap .8s ease-in-out infinite}
+#tut.s2 #tutH{right:calc(74px + var(--sar));top:calc(58px + var(--sat));animation:ttap .8s ease-in-out infinite}
+@keyframes tdrag{0%,100%{transform:translateY(22px)}50%{transform:translateY(-34px)}}
+@keyframes ttap{0%,100%{transform:translateY(14px)}50%{transform:translateY(0) scale(.9)}}
+@keyframes tglow{0%,100%{box-shadow:0 0 0 0 rgba(255,230,109,.95)}50%{box-shadow:0 0 0 16px rgba(255,230,109,0)}}
+body.tu0 #joy,body.tu1 #jump,body.tu2 #coinp{animation:tglow 1s infinite}
+.tag{font-size:15px!important;margin:0 0 4px!important}
+.tag b{color:#ffe66d}
+.shr{pointer-events:auto;margin-top:14px;font:inherit;font-weight:900;font-size:15px;color:#fff;background:rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.7);border-radius:20px;padding:8px 16px}
+.shr:active{transform:translateY(2px)}
 .f{position:absolute;font-weight:900;font-size:20px;color:#fff6b8;transform:translate(-50%,-50%);animation:fup .9s ease-out forwards;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.4)}
 .f.c{color:#ffd94a;font-size:24px}
 .f.d{color:#7df9c3;font-size:30px;animation-duration:1.3s}
@@ -233,17 +263,20 @@ body.pwv #pwU{display:flex}
 <div id="spd" class="sh"><b id="spdN">0</b><small>SPEED</small></div>
 <div id="card" class="sh"><small id="cardS"></small><span id="cardT"></span></div>
 <div id="zl"></div><div id="zr"></div>
+<div id="tut" class="sh"><div id="tutB"></div><div id="tutH">&#x1F446;</div></div>
 <div id="joy"><div id="knob"></div></div>
 <div id="jump" class="sh">JUMP</div>
 
 <div id="home" class="ov on sh">
   <h1>Tippy Tap<br><em>World</em></h1>
+  <p class="tag">A cozy ASMR game for kids<br><b>Free</b> &middot; <b>No ads</b> &middot; <b>Plays in your browser</b></p>
   <p id="hi0" style="font-weight:900;min-height:22px"></p>
   <div class="hrow">
     <button class="hc" id="bHmPlay"><b>&#x1F430;</b><strong>Tippy Tap Escape</strong><span>Run, hop and dodge!</span></button>
     <button class="hc sq" id="bHmSq"><b>&#x2328;&#xFE0F;</b><strong>Keyboard World</strong><span>Collect, type and trade!</span></button>
     <button class="hc pw" id="bHmPw"><b>&#x1F43E;</b><strong>Pet World</strong><span>Feed, wash and play with your pets!</span></button>
   </div>
+  <button class="shr" id="bShare0">&#x1F49B; Share this game</button>
   <div id="tst" style="display:none;margin-top:14px"><p style="font-size:13px;font-weight:900;margin:0 0 4px;opacity:.9">TEST MODE (only in the preview, never on the real game)</p>
     <div class="row"><button class="sqb" id="bTsSq">All keyboards</button><button class="sqb" id="bTsPet">All pets</button><button class="sqb" id="bTsGem">+50 gems</button><button class="sqb" id="bTsCoin">+10000 coins</button></div></div>
 </div>
@@ -298,7 +331,7 @@ body.pwv #pwU{display:flex}
   <h2 id="clrT">Stage Clear!</h2>
   <div id="stats"></div>
   <button class="btn" id="bNext">Next Stage</button>
-  <button class="btn alt" id="bLead3">Leaderboard</button>
+  <div class="row"><button class="btn alt" id="bLead3">Leaderboard</button><button class="btn alt" id="bShare">Send to a friend</button></div>
 </div>
 
 <div id="pick" class="ov clr sh">
@@ -334,8 +367,9 @@ body.pwv #pwU{display:flex}
   <button class="btn alt" id="bMvX">Back</button>
 </div>
 <div id="name" class="ov sh">
-  <h2>What's your name?</h2>
-  <input id="nmIn" type="text" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Your name" aria-label="Your name">
+  <h2>Pick a nickname!</h2>
+  <input id="nmIn" type="text" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Nickname" aria-label="Nickname">
+  <p style="font-size:14px;opacity:.9">Grown-ups: please use a nickname, not a real name.<br>It can show on the online leaderboard.</p>
   <button class="btn" id="bNmOk">OK</button>
   <button class="btn alt" id="bNmX">Back</button>
 </div>
@@ -946,6 +980,21 @@ function leadDraw(){const L=$('leadL');L.innerHTML='';const p0=me();
 function showLead(from){G.lbFrom=from;const p0=me();if(p0){p0.best=Math.max(p0.best||1,G.best);p0.earned=Math.max(p0.earned||0,G.earned);p0.chr=G.chr;}
   show('lead');lbSync(()=>{if($('lead').classList.contains('on'))leadDraw();});leadDraw();}
 function load(){const p=me();return p&&p.s>=1?p:null;}
+const SHARE_TXT='Tippy Tap Escape: a cozy ASMR game for kids. Free, no ads, plays in your browser.';
+function shareGame(){const u=NEW_HOME,short=u.replace('https://','').replace(/\/$/,'');
+  const cp=()=>{try{navigator.clipboard.writeText(SHARE_TXT+' '+u).then(()=>toast('Link copied!'),()=>toast(short));}catch(e){toast(short);}};
+  if(navigator.share){try{navigator.share({title:'Tippy Tap Escape',text:SHARE_TXT,url:u}).catch(e=>{if(!e||e.name!=='AbortError')cp();});}catch(e){cp();}}else cp();}
+/* First-run tutorial: three hints on Stage 1 for a player who has never cleared it. Nothing is saved for it. */
+const TUT={s:-1,t:0,shown:-2},TUTX=['Drag the left circle to run!','Tap JUMP to hop over gaps!','New tiles give coins. Tap your coins to shop!'];
+function tutStart(){TUT.s=(G.stage===1&&(G.best||1)<=1)?0:-1;TUT.t=0;}
+function tutDraw(v){if(v===TUT.shown)return;TUT.shown=v;const e=$('tut'),b=document.body;e.className='sh'+(v>=0?' on s'+v:'');b.classList.remove('tu0','tu1','tu2');if(v>=0){b.classList.add('tu'+v);$('tutB').textContent=TUTX[v];}}
+function tutTick(dt){if(TUT.s<0){tutDraw(-1);return;}
+  if(G.stage!==1||G.state==='clear'||G.state==='menu'){TUT.s=-1;tutDraw(-1);return;}
+  if(G.state!=='play'&&G.state!=='dead'){tutDraw(-1);return;}
+  tutDraw(TUT.s);const k=inp.k;
+  if(TUT.s===0){if(Math.hypot(inp.x,inp.y)>.3||k.ArrowUp||k.ArrowDown||k.ArrowLeft||k.ArrowRight||k.KeyW||k.KeyA||k.KeyS||k.KeyD)TUT.t+=dt;if(TUT.t>.7){TUT.s=1;TUT.t=0;}}
+  else if(TUT.s===1){if(TUT.t>0||inp.jump||k.Space)TUT.t+=dt;if(TUT.t>.6){TUT.s=2;TUT.t=0;}}
+  else{TUT.t+=dt;if(TUT.t>5){TUT.s=-1;tutDraw(-1);toast('You got it!');}}}
 function toast(s){const e=$('toast');e.textContent=s;e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 function card(a,b){$('cardS').textContent=a;$('cardT').textContent=b;const e=$('card');e.classList.remove('on');void e.offsetWidth;e.classList.add('on');}
 function hud(){ $('coinn').textContent=G.coins; }
@@ -998,7 +1047,7 @@ function showPick(){G.state='pick';const box=$('pkL');box.innerHTML='';
   for(const c of CHARS){const lock=c[3]&&G.gems<c[3],b=document.createElement('button');b.className='chip'+(G.chr===c[0]?' sel':'');b.innerHTML='<b>'+(lock?'\uD83D\uDD12':c[2])+'</b>'+(lock?GEM+' '+c[3]:c[1]);if(lock)b.style.opacity=.75;
     b.addEventListener('click',()=>{if(lock){SFX.keyUp();$('pkG').textContent='Find '+(c[3]-G.gems)+' more gem'+(c[3]-G.gems>1?'s':'')+' to unlock '+c[1]+' '+c[2]+'!';return;}G.chr=c[0];const P=G.P;if(P.gr){P.vy=7;P.gr=false;P.ground=null;}SFX.coin(2);save();showPick();});box.appendChild(b);}
   show('pick');}
-function go(){show(null);{const tw=G.W.tw;card('STAGE '+G.stage,tw?TWS[tw].ic+' '+TWS[tw].n:G.W.th.name);}G.gift=0;G.wd.on=0;G.wd.t=4;G.state='play';chReset();
+function go(){show(null);tutStart();{const tw=G.W.tw;card('STAGE '+G.stage,tw?TWS[tw].ic+' '+TWS[tw].n:G.W.th.name);}G.gift=0;G.wd.on=0;G.wd.t=4;G.state='play';chReset();
   if(G.revS!==G.stage){G.revOn=false;G.revLeft=0;}
   armHud();if(G.W.portal&&!G.W.bonusUsed)toast('Bonus door at the first checkpoint!');
   if(G.rev>0&&G.revS!==G.stage){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;save();}revHud();
@@ -1941,7 +1990,7 @@ $('bNmOk').addEventListener('click',nameOk);$('nmIn').addEventListener('keydown'
 $('bNmX').addEventListener('click',()=>{$('nmIn').blur();nameCb=null;show(G.nmFrom||'start');});
 $('bWho').addEventListener('click',()=>{if(PL.list.length)showWho();else showName(null);});
 $('bWhoNew').addEventListener('click',()=>showName(null));$('bWhoX').addEventListener('click',()=>show('start'));
-$('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventListener('click',()=>showLead('pause'));$('bLead3').addEventListener('click',()=>showLead('clear'));
+$('bLead').addEventListener('click',()=>showLead('start'));$('bLead2').addEventListener('click',()=>showLead('pause'));$('bLead3').addEventListener('click',()=>showLead('clear'));$('bShare').addEventListener('click',shareGame);$('bShare0').addEventListener('click',shareGame);
 $('bLeadX').addEventListener('click',()=>show(G.lbFrom||'start'));
 $('bMove').addEventListener('click',()=>showMove(''));$('bMvCopy').addEventListener('click',mvCopy);$('bMvLoad').addEventListener('click',()=>{initAudio();mvLoad();});$('bMvX').addEventListener('click',()=>show('start'));
 plLoad();if(me())usePlayer(PL.cur);else refreshStart();goHome();
@@ -1957,7 +2006,7 @@ function frame(now){requestAnimationFrame(frame);let dt=(now-last)/1000;last=now
   if(G.state==='petw'){pwFrame(dt);return;}
   if(G.state==='menu'){G.t+=dt;G.cam.z=-((G.t*2.2)%Math.max(20,G.W.total-10));G.P.z=G.cam.z;G.P.x=G.cam.x=Math.sin(G.t*.3)*2;G.P.y=-50;G.P.lastGY=0;G.cam.y=0;G.state='dead';render();G.state='menu';return;}
   if(G.state!=='pause'&&G.state!=='shop'){const n=dt>.02?2:1;for(let i=0;i<n;i++)update(dt/n);}
-  render();}
+  tutTick(dt);render();}
 requestAnimationFrame(frame);
 })();
 </script>
