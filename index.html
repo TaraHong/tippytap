@@ -1912,7 +1912,7 @@ function pwUI(){const has=PW.pets.length>0,p=PW.sel;$('pwN').style.display=has?'
   if(pwGiftOk(s)&&!busy)btn('🎁','Gift!',pwGift,'gift');
   btn(PWICO.f,'Feed',()=>pwAct('f'),busy?'off':'');btn(PWICO.h,'Play',()=>pwAct('h'),busy?'off':'');btn(PWICO.c,'Wash',()=>pwAct('c'),busy?'off':'');btn('💗','Cuddle',()=>pwAct('x'),busy?'off':'');
   $('pwH').textContent=p.st==='wash'?'Rub your pet to make bubbles!':PW.pets.length>1?'Tap a pet to pick it. Tap it again to cuddle.':'Tap your pet to cuddle it.';}
-function pwGo(p,tx,tz,sp,dt){const dx=tx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);if(d<.06){p.mv=false;return true;}p.fa=Math.atan2(dx,-dz);const m=Math.min(d,sp*dt);p.x+=dx/d*m;p.z+=dz/d*m;p.mv=true;return d-m<.06;}
+function pwGo(p,tx,tz,sp,dt){const dx=tx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);if(d<.06){p.mv=false;return true;}p.fa=Math.atan2(dx,-dz);const m=Math.min(d,Math.min(sp,Math.max(d*7,.3))*dt);p.x+=dx/d*m;p.z+=dz/d*m;p.mv=true;return d-m<.06;}
 function pwUpd(dt){const t=PW.t,b=PW.ball;
   if(b&&!b.rest){b.vy-=9*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;if(b.y<.14){b.y=.14;b.n++;aThud(0,.3);aDrop(0,1,.3,0);if(b.n>2){b.rest=true;}else{b.vy=3.4/b.n;b.vx*=.45;b.vz*=.45;}}}
   for(const p of PW.pets)for(const o of PW.pets){if(o===p||pwBusy(p))continue;const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);if(d<.75&&d>.001){const k=(.75-d)/d*Math.min(1,dt*6);p.x+=dx*k;p.z+=dz*k;}}
