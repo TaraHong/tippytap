@@ -1449,7 +1449,7 @@ function render(){
   const zm=G.zoom,FX=tr(),eh=(port?7.6:5.6)*zm,eb=(port?10.5:8.4)*zm;
   const ex=C.x,ey=C.y+eh,ez=C.z+eb;
   persp(PRJ,(port?66:54)*Math.PI/180,asp,.3,150);lookAt(VW,ex,ey,ez,C.x,C.y+1-(1-zm)*2.8,C.z-5*zm);mul(VP,PRJ,VW);
-  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.depthMask(true);
+  gl.depthMask(true);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.uniformMatrix4fv(U_.uVP,false,VP);gl.uniform3f(U_.uEye,ex,ey,ez);gl.uniform2f(U_.uFog,46,78);
   const tw=G.bn?'':W.tw,nt=tw==='night';gl.uniform1f(U_.uAmb,nt?.36:1);
   const zmin=P.z-80,zmax=ez+3;
@@ -1759,7 +1759,7 @@ function sqReveal(){const op=SQS.op,d=op.d;op.done=true;SQS.cur=d;KB.drop=2.2;SQ
   const cols=d.t>=5?CONF:[[1,1,1],op.cap.col,[1,.9,.5]];for(let i=0;i<26+d.t*5;i++){const a=rand(0,6.283),s=rand(1.5,4.5);SQS.parts.push({x:0,y:.9,z:0,vx:Math.cos(a)*s*1.6,vy:rand(3,8),vz:Math.sin(a)*s*1.6,l:rand(.7,1.5),c:cols[(Math.random()*cols.length)|0]});}
   kbSnd('thock',true,1);if(d.t>=5){SFX.clear();setTimeout(()=>SFX.mile(),500);}else if(d.t>=3)SFX.mile();else SFX.buy();sqVUI();}
 function sqFrame(dt){SQS.t+=dt;if(SQS.mode!=='view'&&SQS.mode!=='open')return;const t=SQS.t,asp=cv.width/cv.height,op=SQS.op;
-  gl.viewport(0,0,cv.width,cv.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.depthMask(true);
+  gl.viewport(0,0,cv.width,cv.height);gl.depthMask(true);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   SQS.idle+=dt;if(SQS.idle>7)SQS.ya+=dt*.35;
   SQS.dist=Math.max(6.6,6.5/asp);sqCam(SQS.ya,SQS.pi,SQS.dist,asp,.3);
   if(op&&!op.done){op.t+=dt;const k=Math.min(1,op.t/1.25);ST.ox=Math.sin(op.t*34)*.22*k;ST.oy=Math.abs(Math.sin(op.t*21))*.12*k;ST.oz=0;ST.s=1.9;
@@ -1932,7 +1932,7 @@ function pwPet(p,t){const P=G.P,q=G.pet,a=[P.x,P.z,P.vx,P.vz,q.x,q.y,q.z];
 function pwFrame(dt){PW.t+=dt;const t=PW.t,asp=cv.width/cv.height,S=PW.sel,W=PW.wash,C=PW.cam;pwUpd(dt);
   const k=Math.min(1,dt*3),d=(W?4.6:6.4)/Math.min(1,asp*1.2);C.x+=((S?S.x*.6:0)-C.x)*k;C.z+=((S?S.z*.6:0)-C.z)*k;C.d+=(d-C.d)*k;
   const ex=C.x,ey=.4+C.d*.56,ez=C.z+C.d*.83;
-  gl.viewport(0,0,cv.width,cv.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.depthMask(true);
+  gl.viewport(0,0,cv.width,cv.height);gl.depthMask(true);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   persp(PRJ,40*Math.PI/180,asp,.2,90);lookAt(VW,ex,ey,ez,C.x,.35,C.z);mul(VP,PRJ,VW);gl.uniformMatrix4fv(U_.uVP,false,VP);gl.uniform3f(U_.uEye,ex,ey,ez);gl.uniform2f(U_.uFog,400,500);gl.uniform1f(U_.uAmb,1);
   /* the yard */
   D(SPHH,0,-.12,0,11,.24,9,[.6,.86,.52]);D(SPHH,0,0,.2,5.6,.03,4.4,[1,.9,.74]);D(SPHH,0,.01,.2,4.6,.03,3.5,[1,.8,.82]);
