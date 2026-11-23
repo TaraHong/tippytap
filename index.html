@@ -1568,12 +1568,20 @@ const SQS={tab:'mine',mode:'',cur:null,t:0,ya:.4,pi:.22,idle:9,pid:null,pm:'',x0
 /* Three rows of six keys, then a small key, a long space bar and a small key. KB holds how far each key is down, how many fingers hold it,
    the recent presses (the light spreads out from them) and which finger is on which key. */
 const KEYS=[];for(let r=0;r<3;r++)for(let c=0;c<6;c++)KEYS.push({x:(c-2.5)*.64,z:(r-1.5)*.64,w:.56});KEYS.push({x:-1.6,z:.96,w:.56},{x:0,z:.96,w:2.48,sp:1},{x:1.6,z:.96,w:.56});
-const KB={d:KEYS.map(()=>0),tg:KEYS.map(()=>0),ev:[],ptr:{},drop:0};
+const KB={d:KEYS.map(()=>0),v:KEYS.map(()=>0),tg:KEYS.map(()=>0),ev:[],ptr:{},drop:0};
 const ST={ox:0,oy:0,oz:0,s:1,eye:1},SQA=[],SQTH={};
 let TDE=null;
 const SPHH=(()=>{const P=[],N=[],LA=20,LO=32,pt=(i,j)=>{const th=i/LA*Math.PI,ph=j/LO*Math.PI*2;return[Math.sin(th)*Math.cos(ph),Math.cos(th),Math.sin(th)*Math.sin(ph)];};
   for(let i=0;i<LA;i++)for(let j=0;j<LO;j++){const a=pt(i,j),b=pt(i+1,j),c=pt(i+1,j+1),d=pt(i,j+1);for(const p of [a,b,c,a,c,d]){P.push(p[0]*.5,p[1]*.5,p[2]*.5);N.push(p[0],p[1],p[2]);}}
   return mkMesh(P,N);})();   // a rounder ball than the game's: squishes are looked at up close
+/* A keycap like a real one: a block whose top is smaller than its bottom, so the four sides lean in. tx and tz are how wide the top is (1 = straight sides).
+   The long space bar gets its own so that its ends lean by the same amount as a small key's. */
+function mkCap(tx,tz){const P=[],N=[],b=.5,X=b*tx,Z=b*tz,quad=(a,c,d,e,n)=>{for(const v of [a,c,d,a,d,e]){P.push(v[0],v[1],v[2]);N.push(n[0],n[1],n[2]);}};
+  const nx=1/Math.hypot(1,b-X),ny=(b-X)*nx,mz=1/Math.hypot(1,b-Z),my=(b-Z)*mz;
+  quad([-X,b,-Z],[-X,b,Z],[X,b,Z],[X,b,-Z],[0,1,0]);quad([-b,-b,-b],[b,-b,-b],[b,-b,b],[-b,-b,b],[0,-1,0]);
+  quad([b,-b,-b],[X,b,-Z],[X,b,Z],[b,-b,b],[nx,ny,0]);quad([-b,-b,b],[-X,b,Z],[-X,b,-Z],[-b,-b,-b],[-nx,ny,0]);
+  quad([b,-b,b],[X,b,Z],[-X,b,Z],[-b,-b,b],[0,my,mz]);quad([-b,-b,-b],[-X,b,-Z],[X,b,-Z],[b,-b,-b],[0,my,-mz]);return mkMesh(P,N);}
+const KCAP=mkCap(.7,.7),KCAPW=mkCap(.93,.7);
 /* q() places one part of a charm (or of the capsule): ST moves and shrinks the whole thing onto its keycap. See-through parts wait in SQA. */
 function q(m,x,y,z,sx,sy,sz,col,e,al,bv,ry,rx){const T=ST,s=T.s;if(m===SPH&&s>.6)m=SPHH;const X=T.ox+x*s,Y=T.oy+y*s,Z=T.oz+z*s;
   if(al!==undefined&&al<1)SQA.push([m,X,Y,Z,sx*s,sy*s,sz*s,col,e||0,al,ry||0,rx||0,(bv||0)*s]);
@@ -1636,11 +1644,12 @@ function sqDraw(d,t){SQA.length=0;const B=d.c[0],hi=d.t>=5,i0=SQ.indexOf(d),cry=
   D(CUBE,0,oy+.17,0,4.2,.34,2.95,B,hi?.22:.08,1,0,0,.1);D(CUBE,0,oy+.34,0,3.98,.04,2.73,[B[0]*.5,B[1]*.5,B[2]*.56],0);
   for(let j=0;j<KEYS.length;j++){const k=KEYS[j],L=kbL(j,t),l=Math.max(L,hi?.22+.14*Math.sin(t*2.2-k.x*1.4-k.z):0);
     const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),kc=hi?hsv((k.x+2)*.11+h0,.28,1):j%2?K1:K2,m=Math.min(1,L*1.1);
-    const col=[kc[0]+(led[0]-kc[0])*m,kc[1]+(led[1]-kc[1])*m,kc[2]+(led[2]-kc[2])*m],y=oy+.5-KB.d[j]*.1;
-    if(l>.03)D(CUBE,k.x,oy+.37,k.z,k.w+.1,.04,.66,led,l*1.4);
-    if(cry)SQA.push([CUBE,k.x,y,k.z,k.w,.28,.56,col,.25+L*.6,.62,0,0,.07]);else D(CUBE,k.x,y,k.z,k.w,.28,.56,col,.06+L*.8,1,0,0,.07);
-    if(k.sp){D(SPH,k.x-.8,y+.145,k.z,.2,.03,.2,led,.3+L*.6);D(SPH,k.x,y+.145,k.z,.26,.03,.26,[1,1,1],.2+L*.6);D(SPH,k.x+.8,y+.145,k.z,.2,.03,.2,led,.3+L*.6);}
-    else{const c=ch[j>17?(j>19?1:0):[0,1,0,2,0,3][(j%6+((j/6)|0)*2)%6]];ST.ox=k.x;ST.oy=y+.14;ST.oz=k.z;ST.s=.34;SHP[c.sh](c.c,c.o,t+j*.7);}}
+    const col=[kc[0]+(led[0]-kc[0])*m,kc[1]+(led[1]-kc[1])*m,kc[2]+(led[2]-kc[2])*m],y=oy+.77-KB.d[j]*.2,cap=k.sp?KCAPW:KCAP;
+    if(k.sp){D(CUBE,k.x-.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);D(CUBE,k.x+.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);}else D(CUBE,k.x,oy+.47,k.z,.34,.24,.34,l>.03?led:[.93,.96,1],.12+l);
+    if(l>.03)D(CUBE,k.x,oy+.37,k.z,k.w+.06,.03,.62,led,l*1.3);
+    if(cry)SQA.push([cap,k.x,y,k.z,k.w+.04,.4,.6,col,.25+L*.6,.62,0,0,0]);else D(cap,k.x,y,k.z,k.w+.04,.4,.6,col,.06+L*.8);
+    if(k.sp){D(SPH,k.x-.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);D(SPH,k.x,y+.205,k.z,.26,.03,.26,[1,1,1],.2+L*.6);D(SPH,k.x+.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);}
+    else{const c=ch[j>17?(j>19?1:0):[0,1,0,2,0,3][(j%6+((j/6)|0)*2)%6]];ST.ox=k.x;ST.oy=y+.2;ST.oz=k.z;ST.s=.32;SHP[c.sh](c.c,c.o,t+j*.7);}}
   ST.ox=ST.oy=ST.oz=0;ST.s=1;
   if(hi){const n=d.t>=7?7:d.t>=6?5:3;for(let i=0;i<n;i++){const a=t*.7+i*6.283/n;D(SPH,Math.cos(a)*2.9,.7+.3*Math.sin(t*1.7+i*2),Math.sin(a)*2.2,.12,.12,.12,d.t>=7?hsv(i/n+t*.2,.5,1):[1,.95,.7],1);}}
   sqFlush();}
@@ -1648,7 +1657,7 @@ function sqFlush(){gl.depthMask(false);for(const a of SQA)D(a[0],a[1],a[2],a[3],
 function sqCam(ya,pi,dist,asp,ty){const ex=Math.sin(ya)*Math.cos(pi)*dist,ey=ty+Math.sin(pi)*dist,ez=Math.cos(ya)*Math.cos(pi)*dist;
   persp(PRJ,40*Math.PI/180,asp,.2,80);lookAt(VW,ex,ey,ez,0,ty,0);mul(VP,PRJ,VW);
   gl.uniformMatrix4fv(U_.uVP,false,VP);gl.uniform3f(U_.uEye,ex,ey,ez);gl.uniform2f(U_.uFog,400,500);gl.uniform1f(U_.uAmb,1);}
-function sqRest(){ST.ox=ST.oy=ST.oz=0;ST.s=ST.eye=1;KB.drop=0;KB.ev.length=0;KB.ptr={};for(let j=0;j<KEYS.length;j++)KB.d[j]=KB.tg[j]=0;}
+function sqRest(){ST.ox=ST.oy=ST.oz=0;ST.s=ST.eye=1;KB.drop=0;KB.ev.length=0;KB.ptr={};for(let j=0;j<KEYS.length;j++)KB.d[j]=KB.v[j]=KB.tg[j]=0;}
 /* Small pictures of every keyboard for the lists: each is drawn once into a corner of the game canvas and copied out in the same frame. */
 function sqThumbs(){if(SQTH.ok)return;const S=Math.min(168,cv.width,cv.height),c2=document.createElement('canvas');c2.width=c2.height=S;const x=c2.getContext('2d');sqRest();
   gl.depthMask(true);gl.viewport(0,0,S,S);gl.enable(gl.SCISSOR_TEST);gl.scissor(0,0,S,S);
@@ -1676,9 +1685,10 @@ function kbSnd(v,dn,sp){AF=(sp?.66:1)*rand(.93,1.07);const g=(dn?1:.5)*(KBG[v]||
   else if(v==='bubble'){aDrop(0,1,.7*g,0);N({type:'lowpass',f:420*AF,d:.05,a:.004,g:5*g});}
   else if(v==='type'){N({type:'bandpass',f:rand(2600,3000)*AF,q:14,d:.09,a:.0008,g:7*g});N({type:'lowpass',f:500*AF,d:.05,a:.001,g:6*g});aTick(0,1,.6*g,0,3000,5000);}
   else{N({type:'bandpass',f:rand(4200,5200)*AF,q:10,d:.05,a:.0006,g:7*g});N({type:'lowpass',f:700*AF,d:.03,a:.001,g:3*g});}}
-function sqStep(dt){for(let j=0;j<KEYS.length;j++){const g=KB.tg[j]>0?1:0;KB.d[j]+=(g-KB.d[j])*Math.min(1,dt*(g?45:18));}
+/* Each key is a little spring: it goes down fast and firm, and on the way back up it overshoots a touch, like a real switch. */
+function sqStep(dt){const n=Math.ceil(dt/.008),h=dt/n;for(let j=0;j<KEYS.length;j++){const g=KB.tg[j]>0?1:0,k=g?1400:520,c=g?70:22;let d=KB.d[j],v=KB.v[j];for(let i=0;i<n;i++){v+=((g-d)*k-v*c)*h;d+=v*h;}KB.d[j]=clamp(d,-.25,1.05);KB.v[j]=v;}
   KB.drop*=Math.pow(.0008,dt);while(KB.ev.length&&SQS.t-KB.ev[0].t>1.2)KB.ev.shift();}
-function sqView(id,mode){SQS.cur=id?SQI[id]:null;SQS.mode=mode||'view';sqRest();SQS.idle=0;SQS.ya=0;SQS.pi=.9;SQS.pid=null;SQS.parts.length=0;
+function sqView(id,mode){SQS.cur=id?SQI[id]:null;SQS.mode=mode||'view';sqRest();SQS.idle=0;SQS.ya=0;SQS.pi=.74;SQS.pid=null;SQS.parts.length=0;
   document.body.classList.add('sqv');$('sq').classList.add('view');sqVUI();}
 function sqBack(){document.body.classList.remove('sqv');$('sq').classList.remove('view');SQS.mode='';SQS.op=null;sqRest();sqTab();}
 function sqOwned(){return SQ.filter(d=>G.sq[d.id]);}
@@ -1710,9 +1720,9 @@ function sqFrame(dt){SQS.t+=dt;if(SQS.mode!=='view'&&SQS.mode!=='open')return;co
   else if(SQS.cur){sqStep(dt);sqDraw(SQS.cur,t);}
   for(let i=SQS.parts.length-1;i>=0;i--){const p=SQS.parts[i];p.l-=dt;if(p.l<=0){SQS.parts.splice(i,1);continue;}p.vy-=9*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;const s=.17*Math.min(1,p.l*2);D(SPH,p.x,p.y,p.z,s,s,s,p.c,.6);}}
 /* Touch in the viewer: a finger on a key presses it (several fingers can play at once, and sliding runs across the keys); a finger beside the keyboard turns the camera. */
-function kbHit(x,y){let b=-1,bd=1e9;const yy=KB.drop+.66;for(let j=0;j<KEYS.length;j++){const k=KEYS[j],n=k.sp?5:1;for(let u=0;u<n;u++){const kx=k.x+(n>1?(u-2)*.5:0),a=pwProj(kx,yy,k.z),c=pwProj(kx+.3,yy,k.z),e=pwProj(kx,yy,k.z+.3);
+function kbHit(x,y){let b=-1,bd=1e9;const yy=KB.drop+.97;for(let j=0;j<KEYS.length;j++){const k=KEYS[j],n=k.sp?5:1;for(let u=0;u<n;u++){const kx=k.x+(n>1?(u-2)*.5:0),a=pwProj(kx,yy,k.z),c=pwProj(kx+.3,yy,k.z),e=pwProj(kx,yy,k.z+.3);
     const r=Math.max(Math.hypot(c[0]-a[0],c[1]-a[1]),Math.hypot(e[0]-a[0],e[1]-a[1]),15)*1.15,dd=Math.hypot(x-a[0],y-a[1])/r;if(dd<1&&dd<bd){bd=dd;b=j;}}}return b;}
-function kbPress(j){KB.tg[j]++;KB.ev.push({i:j,t:SQS.t});if(KB.ev.length>14)KB.ev.shift();{const k=KEYS[j],d=SQS.cur,c=d.t>=5?hsv(k.x*.12+k.z*.07-SQS.t*.25,.6,1):hsv(sr(SQ.indexOf(d)+1),.6,1);for(let i=0;i<5;i++)SQS.parts.push({x:k.x+rand(-.3,.3)*(k.sp?4:1),y:.8,z:k.z,vx:rand(-.8,.8),vy:rand(2.5,4.5),vz:rand(-.8,.8),l:rand(.3,.55),c});}kbSnd(SQS.cur.s,true,KEYS[j].sp);}
+function kbPress(j){KB.tg[j]++;KB.ev.push({i:j,t:SQS.t});if(KB.ev.length>14)KB.ev.shift();{const k=KEYS[j],d=SQS.cur,c=d.t>=5?hsv(k.x*.12+k.z*.07-SQS.t*.25,.6,1):hsv(sr(SQ.indexOf(d)+1),.6,1);for(let i=0;i<5;i++)SQS.parts.push({x:k.x+rand(-.3,.3)*(k.sp?4:1),y:1.15,z:k.z,vx:rand(-.8,.8),vy:rand(2.5,4.5),vz:rand(-.8,.8),l:rand(.3,.55),c});}kbSnd(SQS.cur.s,true,KEYS[j].sp);}
 function kbRel(j){KB.tg[j]=Math.max(0,KB.tg[j]-1);kbSnd(SQS.cur.s,false,KEYS[j].sp);}
 function sqDown(e){if(e.target.closest('button')||!SQS.cur||(SQS.op&&!SQS.op.done))return;initAudio();SQS.idle=0;const j=kbHit(e.clientX,e.clientY);
   if(j>=0){KB.ptr[e.pointerId]=j;kbPress(j);}else if(SQS.pid===null){SQS.pid=e.pointerId;SQS.lx=e.clientX;SQS.ly=e.clientY;}else return;
