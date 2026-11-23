@@ -1549,7 +1549,7 @@ function homeJoy(){joy.style.transform='';const r=joy.getBoundingClientRect();hx
 function joyMove(e){let dx=(e.clientX-ox)/JR,dy=(e.clientY-oy)/JR;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l;}inp.x=dx;inp.y=dy;knob.style.transform='translate('+dx*JR+'px,'+dy*JR+'px)';}
 const zl=$('zl'),zr=$('zr');
 zl.addEventListener('pointerdown',e=>{e.preventDefault();if(joyId!==null)return;joyId=e.pointerId;try{zl.setPointerCapture(e.pointerId);}catch(_){}
-  if(Math.hypot(e.clientX-hx,e.clientY-hy)<90){ox=hx;oy=hy;}else{ox=e.clientX;oy=e.clientY;}
+  if(TUT.s>=0||Math.hypot(e.clientX-hx,e.clientY-hy)<90){ox=hx;oy=hy;}else{ox=e.clientX;oy=e.clientY;}
   joy.style.transform='translate('+(ox-hx)+'px,'+(oy-hy)+'px)';joyMove(e);});
 zl.addEventListener('pointermove',e=>{if(e.pointerId===joyId){e.preventDefault();joyMove(e);}});
 function joyEnd(e){if(e.pointerId!==joyId)return;joyId=null;inp.x=inp.y=0;knob.style.transform='';joy.style.transform='';}
