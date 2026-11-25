@@ -1722,11 +1722,15 @@ function sqDraw(d,t){SQA.length=0;const B=d.c[0],hi=d.t>=5,i0=SQ.indexOf(d),cry=
   ST.eye=(t%3.4)<.12?.15:1;SQA.push([SPHH,0,.012,0,5.5,.02,4.1,[.25,.2,.45],0,.13,0,0,0]);
   D(CUBE,0,oy+.17,0,4.2,.34,2.95,B,hi?.22:.08,1,0,0,.1);D(CUBE,0,oy+.34,0,3.98,.04,2.73,[B[0]*.5,B[1]*.5,B[2]*.56],0);
   for(let j=0;j<KEYS.length;j++){const k=KEYS[j],L=kbL(j,t),l=Math.max(L,hi?.22+.14*Math.sin(t*2.2-k.x*1.4-k.z):0);
-    const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),kc=hi?hsv((k.x+2)*.11+h0,.28,1):j%2?K1:K2,m=Math.min(1,L*1.1);
+    const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),kc=hi?hsv((k.x+2)*.11+h0,.28,1):j%2?K1:K2,m=Math.min(.22,L*.22);
     const col=[kc[0]+(led[0]-kc[0])*m,kc[1]+(led[1]-kc[1])*m,kc[2]+(led[2]-kc[2])*m],y=oy+.77-KB.d[j]*.2,cap=k.sp?KCAPW:KCAP;
     if(k.sp){D(CUBE,k.x-.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);D(CUBE,k.x+.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);}else D(CUBE,k.x,oy+.47,k.z,.34,.24,.34,l>.03?led:[.93,.96,1],.12+l);
-    if(l>.03)D(CUBE,k.x,oy+.37,k.z,k.w+.06,.03,.62,led,l*1.3);
-    if(cry)SQA.push([cap,k.x,y,k.z,k.w+.04,.4,.6,col,.25+L*.6,.62,0,0,0]);else D(cap,k.x,y,k.z,k.w+.04,.4,.6,col,.06+L*.8);
+    /* The light comes from under the cap: a bright pool on the plate, a glow leaking out of the gap, a lit lower rim. The cap itself only picks up a little of the colour. */
+    if(l>.03){const gap=y-.2-(oy+.36),wh=[led[0]*.45+.55,led[1]*.45+.55,led[2]*.45+.55];
+      D(CUBE,k.x,oy+.37,k.z,k.w+.16,.03,.72,wh,l*1.5);
+      if(gap>.02)SQA.push([CUBE,k.x,oy+.36+gap/2,k.z,k.w+.1,gap,.66,led,l*1.6,.2+.3*l,0,0,0]);
+      if(L>.05){SQA.push([SPHH,k.x,oy+.375,k.z,k.w+.7,.02,1.24,led,L*1.5,.5*L,0,0,0]);SQA.push([CUBE,k.x,oy+.36+(gap+.12)/2,k.z,k.w+.2,gap+.12,.76,led,L*1.6,.26*L,0,0,.06]);D(CUBE,k.x,y-.185,k.z,k.w+.07,.035,.63,wh,L*1.2);}}
+    if(cry)SQA.push([cap,k.x,y,k.z,k.w+.04,.4,.6,col,.25+L*.45,.62,0,0,0]);else D(cap,k.x,y,k.z,k.w+.04,.4,.6,col,.06+L*.16);
     if(k.sp){D(SPH,k.x-.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);D(SPH,k.x,y+.205,k.z,.26,.03,.26,[1,1,1],.2+L*.6);D(SPH,k.x+.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);}
     else{const c=ch[j>17?(j>19?1:0):[0,1,0,2,0,3][(j%6+((j/6)|0)*2)%6]];ST.ox=k.x;ST.oy=y+.2;ST.oz=k.z;ST.s=.32;SHP[c.sh](c.c,c.o,t+j*.7);}}
   ST.ox=ST.oy=ST.oz=0;ST.s=1;
