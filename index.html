@@ -1752,8 +1752,22 @@ function sqDraw(d,t){SQA.length=0;const B=d.c[0],hi=d.t>=5,i0=SQ.indexOf(d),cry=
   const ch=[d,SQ[(i0+5)%28],SQ[(i0+11)%28],SQ[(i0+17)%28]],K1=[.5+B[0]*.5,.5+B[1]*.5,.5+B[2]*.5],K2=[.76+B[0]*.24,.76+B[1]*.24,.76+B[2]*.24];
   ST.eye=(t%3.4)<.12?.15:1;SQA.push([SPHH,0,.012,0,5.5,.02,4.1,[.25,.2,.45],0,.13,0,0,0]);
   D(CUBE,0,oy+.17,0,4.2,.34,2.95,B,hi?.22:.08,1,0,0,.1);D(CUBE,0,oy+.34,0,3.98,.04,2.73,[B[0]*.5,B[1]*.5,B[2]*.56],0);
+  /* From Uncommon up every rarity adds dressing to the case: a trim rim, then an underglow and running lights, corner pearls, corner gems and a little tiara. */
+  const T=d.t,mx=Math.max(B[0],B[1],B[2]),mn=Math.min(B[0],B[1],B[2]),hb=mx-mn<.08?h0:((mx===B[0]?(B[1]-B[2])/(mx-mn):mx===B[1]?2+(B[2]-B[0])/(mx-mn):4+(B[0]-B[1])/(mx-mn))/6+1)%1;
+  const dh=Math.abs(((h0-hb)%1+1.5)%1-.5),ha=mx-mn>=.08&&dh<.14?hb+.42:h0,AC=hsv(ha,.42,1),glow=hi?hsv(t*.2,.7,1):hsv(ha,.8,1);
+  if(T>=2){const tr=T>=7?hsv(t*.15,.45,1):T>=6?GOLD:T>=4?[.96,.97,1]:T>=3?AC:[1,1,1];
+    D(CUBE,0,oy+.305,0,4.34,.09,3.09,tr,T>=6?.45:T>=4?.3:.14,1,0,0,.04);
+    if(T>=3){SQA.push([SPHH,0,.02,0,5.7,.02,4.3,glow,1,.2+.08*Math.sin(t*2.4),0,0,0]);
+      const nf=7,ns=T>=5?4:0,lamp=(x,z,i,sx,sz)=>D(SPH,x,oy+.15,z,sx,.13,sz,T>=5?hsv(i*.09+t*.3,.75,1):glow,.2+1.1*Math.max(0,Math.sin(t*4.5-i*.85)));
+      for(let i=0;i<nf;i++){lamp((i-3)*.6,1.48,i,.13,.07);if(T>=6)lamp((3-i)*.6,-1.48,i+11,.13,.07);}
+      for(let i=0;i<ns;i++){lamp(2.105,(1.5-i)*.72,i+7,.07,.13);lamp(-2.105,(i-1.5)*.72,i+18,.07,.13);}}
+    if(T>=4){D(CUBE,0,oy+.035,0,4.3,.07,3.05,glow,.75+.25*Math.sin(t*2.4));
+      for(let k=0;k<4;k++){const x=(k&1?1:-1)*2.02,z=(k&2?1:-1)*1.4,y=oy+.35;
+        if(T>=6){const gc=hsv(k*.25+t*(T>=7?.3:.08),.5,1);D(SPH,x,y+.03,z,.3,.12,.3,GOLD,.4);D(CONE,x,y+.2,z,.26,.24,.26,gc,.7,1,t*1.4,Math.PI);D(CONE,x,y+.37,z,.26,.1,.26,gc,.85,1,t*1.4);}
+        else D(SPH,x,y+.09,z,.26,.26,.26,T>=5?hsv(k*.25+t*.25,.4,1):[1,1,1],T>=5?.5:.3);}}
+    if(T>=6)for(let i=0;i<5;i++){const h=[.7,.95,1.25,.95,.7][i],x=(i-2)*.7;D(CONE,x,oy+.35+h/2,-1.5,.4,h,.16,GOLD,.45);if(T>=7)D(SPH,x,oy+.38+h,-1.5,.17,.17,.17,hsv(i*.2+t*.3,.6,1),.9);}}
   for(let j=0;j<KEYS.length;j++){const k=KEYS[j],L=kbL(j,t),l=Math.max(L,hi?.22+.14*Math.sin(t*2.2-k.x*1.4-k.z):0);
-    const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),kc=hi?hsv((k.x+2)*.11+h0,.28,1):j%2?K1:K2,m=Math.min(.22,L*.22);
+    const led=hi?hsv(k.x*.12+k.z*.07-t*.25,.75,1):d.t>=3?hsv(h0+(j%2)*.12,.8,1):hsv(h0,.8,1),r6=(j/6)|0,c6=j%6,kc=hi?hsv((k.x+2)*.11+h0,.28,1):T<2?(j%2?K1:K2):T>=4?[K1[0]+(AC[0]-K1[0])*(k.x+1.6)/3.2,K1[1]+(AC[1]-K1[1])*(k.x+1.6)/3.2,K1[2]+(AC[2]-K1[2])*(k.x+1.6)/3.2]:j>17||(T>=3&&r6!==1&&(c6===0||c6===5))?AC:(r6+c6)%2?K1:K2,m=Math.min(.22,L*.22);
     const col=[kc[0]+(led[0]-kc[0])*m,kc[1]+(led[1]-kc[1])*m,kc[2]+(led[2]-kc[2])*m],y=oy+.77-KB.d[j]*.2,cap=k.sp?KCAPW:KCAP;
     if(k.sp){D(CUBE,k.x-.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);D(CUBE,k.x+.8,oy+.47,k.z,.32,.24,.32,l>.03?led:[.93,.96,1],.12+l);}else D(CUBE,k.x,oy+.47,k.z,.34,.24,.34,l>.03?led:[.93,.96,1],.12+l);
     /* The light comes from under the cap: a bright pool on the plate, a glow leaking out of the gap, a lit lower rim. The cap itself only picks up a little of the colour. */
@@ -1765,7 +1779,7 @@ function sqDraw(d,t){SQA.length=0;const B=d.c[0],hi=d.t>=5,i0=SQ.indexOf(d),cry=
     if(k.sp){D(SPH,k.x-.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);D(SPH,k.x,y+.205,k.z,.26,.03,.26,[1,1,1],.2+L*.6);D(SPH,k.x+.8,y+.205,k.z,.2,.03,.2,led,.3+L*.6);}
     else{const c=ch[j>17?(j>19?1:0):[0,1,0,2,0,3][(j%6+((j/6)|0)*2)%6]];ST.ox=k.x;ST.oy=y+.2;ST.oz=k.z;ST.s=.32;SHP[c.sh](c.c,c.o,t+j*.7,KB.sa[j]);}}
   ST.ox=ST.oy=ST.oz=0;ST.s=1;
-  if(hi){const n=d.t>=7?7:d.t>=6?5:3;for(let i=0;i<n;i++){const a=t*.7+i*6.283/n;D(SPH,Math.cos(a)*2.9,.7+.3*Math.sin(t*1.7+i*2),Math.sin(a)*2.2,.12,.12,.12,d.t>=7?hsv(i/n+t*.2,.5,1):[1,.95,.7],1);}}
+  if(T>=3){const n=T>=7?7:T>=6?5:T>=5?4:T-1;for(let i=0;i<n;i++){const a=t*.7+i*6.283/n;D(SPH,Math.cos(a)*3,.7+.3*Math.sin(t*1.7+i*2),Math.sin(a)*2.3,.12,.12,.12,d.t>=7?hsv(i/n+t*.2,.5,1):[1,.95,.7],1);}}
   sqFlush();}
 function sqFlush(){gl.depthMask(false);for(const a of SQA)D(a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12]);gl.depthMask(true);SQA.length=0;}
 function sqCam(ya,pi,dist,asp,ty){const ex=Math.sin(ya)*Math.cos(pi)*dist,ey=ty+Math.sin(pi)*dist,ez=Math.cos(ya)*Math.cos(pi)*dist;
