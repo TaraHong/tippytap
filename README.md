@@ -18,6 +18,8 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-25
+- Pet World 선물: 이제 항상 코인을 주고, 펫이 행복할수록 높은 확률(최대 60%)로 보석도 하나 줍니다.
+- Pet World의 코인 그림이 회색으로 보이던 것을 게임 안의 금색 코인과 같은 그림으로 바꿨습니다.
 - Thanksgiving 이벤트: 11월 넷째 목요일과 다음 날(2026년은 11/26~27) 이틀 동안 모든 스테이지가 Harvest Feast 테마로 바뀌고, Shop에서 Baby Turkey 펫을 살 수 있습니다. 코스 모양은 그대로입니다.
 - Keyboard World: 키를 누르면 키캡 색이 바뀌는 대신 키캡 밑에서 불빛이 새어 나옵니다.
 - 새로 시작하는 플레이어는 보석 5개를 받고 시작합니다(Keyboard World 캡슐을 바로 열어 볼 수 있게).
