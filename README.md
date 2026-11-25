@@ -17,6 +17,9 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
+### 2026-11-26
+- Keyboard World: 투명 큐브 안에 보석이 든 키캡(Crystal Ice, Pudding Party 등)을 누르면 안의 보석이 빙글 돌다가 서서히 멈춥니다.
+
 ### 2026-11-25
 - Pet World 선물: 이제 항상 코인을 주고, 펫이 행복할수록 높은 확률(최대 60%)로 보석도 하나 줍니다.
 - Pet World의 코인 그림이 회색으로 보이던 것을 게임 안의 금색 코인과 같은 그림으로 바꿨습니다.
