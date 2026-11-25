@@ -17,6 +17,10 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
+### 2026-11-25
+- 새로 시작하는 플레이어는 보석 5개를 받고 시작합니다(Keyboard World 캡슐을 바로 열어 볼 수 있게).
+- 보석이 모자랄 때 버튼이 "Need 1"처럼 보여 값이 1인 줄 알던 문제: 이제 진짜 값(💎 2)과 "1 more to go"를 같이 보여 주고, Keyboard World에서는 몇 개 더 찾아야 하는지 노란 안내가 뜹니다(Shop Gems 탭도 같이).
+
 ### 2026-11-23
 - 방문자 수를 세기 시작했습니다(Vercel Web Analytics). 광고는 여전히 없습니다.
 - **스테이지 시작 화면 정리**: 아이템이 많아도 제목과 GO, Shop·Change Buddy·Home 버튼이 화면 밖으로 밀리지 않습니다. 아이템 칩이 작아져 한 줄에 5개씩 보이고, 넘치면 칩 부분만 스크롤됩니다.

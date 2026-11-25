@@ -216,6 +216,10 @@ body.sqv #gl{z-index:20;pointer-events:none}
 .sqrow>div{flex:1;min-width:0}.sqrow strong{display:block;font-size:17px;font-weight:900}.sqrow span{font-size:12.5px;font-weight:700;opacity:.8}
 .sqrow button,.sqact button{pointer-events:auto;font:inherit;font-weight:900;font-size:15px;border:0;border-radius:16px;padding:10px 14px;min-width:92px;background:linear-gradient(180deg,#ffe98a,#ffb938);color:#4a2a00;box-shadow:0 3px 0 rgba(150,80,0,.5)}
 .sqrow button.no,.sqact button.no{background:#d9d9e3;color:#77778a;box-shadow:none}
+.sqrow button small,.it button small{display:block;font-size:11px;font-weight:800;opacity:.85;margin-top:1px}
+.sqhint{background:#fff6c7;border:2px solid #ffd45c;border-radius:16px;padding:8px 12px;margin:0 2px 8px;font-size:14px;font-weight:800;text-align:center;line-height:1.35}
+.sqhint.bump{animation:sqbump .45s ease-out}
+@keyframes sqbump{0%{transform:scale(1)}35%{transform:scale(1.05);background:#ffe98a}100%{transform:scale(1)}}
 .sqrow button.ok,.sqact button.ok{background:linear-gradient(180deg,#b9f6d0,#5fd08f);color:#0d3b22;box-shadow:0 3px 0 rgba(20,100,50,.5)}
 .sqrow button.dc,.sqact button.dc{background:linear-gradient(180deg,#fff,#e4e4f2);color:#2b2a5a;box-shadow:0 3px 0 rgba(60,60,120,.35)}
 .capi{width:50px;height:50px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.18);background:linear-gradient(180deg,var(--cc,#ff9ccb) 0 46%,#fff 46% 54%,#f3f3fa 54%)}
@@ -770,9 +774,11 @@ const TWS={rush:{ic:'\uD83E\uDE99',n:'Coin Rush',d:'Coins everywhere! Grab them 
  wind:{ic:'\uD83D\uDCA8',n:'Windy Day',d:'Gusts of wind push you sideways. Hold on!'},gold:{ic:'\uD83D\uDC51',n:'Golden Stage',d:'King Grumbles is chasing you! Triple stage bonus!'}};
 function twRaw(n){if(n<13)return'';const r=rng(n*131+5),a=r(),b=r();return a<.22?'':TWL[(b*5)|0];}
 function twistOf(n){if(n>=10&&n%10===0)return'gold';let t=twRaw(n);if(t&&t===twRaw(n-1))t=TWL[(TWL.indexOf(t)+1+n%3)%5];return t;}
-const GEM='\uD83D\uDC8E';
+const GEM='\uD83D\uDC8E',START_GEMS=5;   // every new player starts with this many gems
 /* G.gems counts every gem ever found or bought (buddies unlock on it and never lock again); G.gsp is how many were spent. gb() is what is left to spend. */
 function gb(){return G.gems-G.gsp;}
+/* Price label for something you cannot afford yet: the real price first, then how many more you need, so "Need 1" is never mistaken for the price. */
+function gNeed(p){return GEM+' '+p+'<small>'+(p-gb())+' more to go</small>';}
 function build(stage){
   const th=THEMES[(stage-1)%THEMES.length],R=rng(stage*7919+13),d=Math.min(1.25,(stage-1)/8);
   const W={tiles:[],haz:[],coins:[],zones:[],cps:[],decor:[],th,d,finish:null,endZ:0,total:0};
@@ -932,7 +938,7 @@ function plSave(){try{localStorage.setItem('tippytap_players',JSON.stringify({cu
 function me(){for(const p of PL.list)if(p.id===PL.cur)return p;return null;}
 function emo(c){for(const x of CHARS)if(x[0]===c)return x[2];return CHARS[0][2];}
 function save(st,cp){const p=me();if(!p)return;p.s=st||G.stage;p.c=cp===undefined?G.cp:cp;p.coins=G.coins;p.best=Math.max(p.best||1,G.best);p.own=G.own;p.eq=G.eq;p.gon=G.gon;p.gs=G.gs;p.chr=G.chr;p.earned=Math.max(p.earned||0,G.earned);p.arm=G.arm;p.armS=0;p.armOk=false;p.bs=G.bonusS;p.gem=G.gems;p.gsp=G.gsp;p.mg=G.mg;p.pw=G.pw;p.sq=G.sq;p.sqf=G.sqf;p.sqo=G.sqo;p.sqn=G.sqn;p.sqw=G.sqw;p.gmS=G.gemS;p.rev=G.rev;p.revS=G.revS;p.revOn=G.revOn;p.revLeft=G.revLeft;plSave();lbSoon();}
-function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};{const k=petOn();if(k)G.gon=G.gon.filter(i=>i===k.id||!GEAR.some(g=>g.pet&&g.id===i));}for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{G.gems=p.gem=Math.floor(((p.best||1)-1)/4);G.gift=G.gems;}G.gsp=Math.min(G.gems,p.gsp||0);G.mg=p.mg&&typeof p.mg==='object'&&TWS[p.mg.tw]?p.mg:null;{const ob=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};G.sq=ob(p.sq);G.sqf=ob(p.sqf);G.sqo=Array.isArray(p.sqo)?p.sqo:[];G.sqn=p.sqn||0;G.sqw=p.sqw?1:0;G.pw=ob(p.pw);}G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
+function usePlayer(id){PL.cur=id;const p=me();if(!p)return;G.own=Array.isArray(p.own)?p.own:[];G.eq=p.eq||null;G.gon=Array.isArray(p.gon)?p.gon:[];G.gs=p.gs&&typeof p.gs==='object'?p.gs:{};{const k=petOn();if(k)G.gon=G.gon.filter(i=>i===k.id||!GEAR.some(g=>g.pet&&g.id===i));}for(const g of GEAR)if(g.st&&G.own.indexOf(g.id)>=0&&!(G.gs[g.id]>0))G.gs[g.id]=g.st;G.chr=p.chr||'bunny';G.earned=p.earned||0;G.best=p.best||1;G.coins=p.coins||0;G.arm=(p.arm||0)+(p.armOk?1:0);p.arm=G.arm;p.armS=0;p.armOk=false;armHud();G.bonusS=p.bs||0;G.gemS=p.gmS||0;if(typeof p.gem==='number')G.gems=p.gem;else{const old=Math.floor(((p.best||1)-1)/4);G.gems=p.gem=Math.max(START_GEMS,old);G.gift=G.gems;G.giftNew=old<START_GEMS;}G.gsp=Math.min(G.gems,p.gsp||0);G.mg=p.mg&&typeof p.mg==='object'&&TWS[p.mg.tw]?p.mg:null;{const ob=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};G.sq=ob(p.sq);G.sqf=ob(p.sqf);G.sqo=Array.isArray(p.sqo)?p.sqo:[];G.sqn=p.sqn||0;G.sqw=p.sqw?1:0;G.pw=ob(p.pw);}G.rev=p.rev||0;G.revS=p.revS||0;G.revOn=!!p.revOn;G.revLeft=p.revLeft||0;revHud();plSave();refreshStart();}
 function addPlayer(name){const p={id:'p'+Date.now().toString(36)+((Math.random()*1e4)|0),name,chr:'bunny',s:0,c:0,coins:0,best:1,own:[],eq:null,earned:0},o=PL.legacy;
   if(o){p.s=o.s;p.c=o.c||0;p.coins=o.coins||0;p.best=o.best||o.s;p.own=Array.isArray(o.own)?o.own:[];p.eq=o.eq||null;p.chr=o.chr||'bunny';p.earned=o.coins||0;PL.legacy=null;}
   PL.list.push(p);usePlayer(p.id);}
@@ -1053,7 +1059,7 @@ function prepStage(n,cpi){if(G.mg&&G.mg.s!==n)G.mg=null;G.stage=n;G.best=Math.ma
 function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rdT').textContent=G.W.th.name;
   $('rdW').textContent=G.stage>=4?'Watch out! Grumbles the grumpy cloud is chasing you. Keep moving!':(G.stage>=2?'Look for the blue zoom lanes. They make you super fast!':'Step on every key for +1 coin!');
   {const tw=G.W.tw,e=$('rdTw');e.style.display=tw?'':'none';if(tw)e.innerHTML='<b>'+TWS[tw].ic+' '+TWS[tw].n+'</b><br>'+TWS[tw].d;
-    $('rdG').textContent=G.gift?'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.':GEM+' '+gb()+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
+    $('rdG').textContent=G.gift?(G.giftNew?'Welcome gift: '+GEM+' '+G.gift+' gems! Open a capsule in Keyboard World.':'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.'):GEM+' '+gb()+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
   const box=$('rdTr'),sy=box.scrollTop;box.innerHTML='';
   if(!G.own.length)box.innerHTML='<p style="font-size:14px;margin:0">No trails yet. Buy one in the Shop!</p>';
   else{for(const g of GEAR){if(G.own.indexOf(g.id)<0)continue;const b=document.createElement('button');b.className='chip'+(wear(g.id)?' sel':'');
@@ -1118,7 +1124,7 @@ function drawShop(){$('shopC').textContent=G.coins;$('shopG').textContent=GEM+' 
       b.addEventListener('click',()=>{if(G.shopTab===q[0])return;G.shopTab=q[0];SFX.keyUp();drawShop();});T.appendChild(b);
       if(q[0]===tab)$('shopCap').textContent=q[3];}}
   const row=(ic,name,desc,label,cls,fn,st)=>{const d=document.createElement('div');d.className='it'+(tab==='pet'?' card':'')+(st?' '+st:'');d.innerHTML='<b>'+ic+'</b><div><strong>'+name+'</strong><span>'+desc+'</span></div>';
-    const b=document.createElement('button');b.textContent=label;if(cls)b.className=cls;b.addEventListener('click',fn);d.appendChild(b);L.appendChild(d);};
+    const b=document.createElement('button');b.innerHTML=label;if(cls)b.className=cls;b.addEventListener('click',fn);d.appendChild(b);L.appendChild(d);};
   if(tab==='boost'){const sc=150+60*G.stage;
   row('\u23ED\uFE0F','Skip Stage '+G.stage,'Jump straight to the next stage',G.coins>=sc?sc+' coins':'Need '+(sc-G.coins)+' more',G.coins>=sc?'':'no',()=>{
     if(G.coins<sc)return;G.coins-=sc;SFX.buy();prepStage(G.stage+1,0);showReady();});
@@ -1129,7 +1135,7 @@ function drawShop(){$('shopC').textContent=G.coins;$('shopG').textContent=GEM+' 
     row(HEART,'Instant Revive','For your next 2 stages: twice per stage, pop right back where you were instead of the checkpoint.'+(n?' ('+n+' stage'+(n>1?'s':'')+' ready)':''),can?REV_COST+' coins':'Need '+(REV_COST-G.coins)+' more',can?'':'no',()=>{
       if(G.coins<REV_COST)return;G.coins-=REV_COST;G.rev+=2;if(!(G.revOn&&G.revLeft>0)){if(G.prev==='play'){G.rev--;G.revS=G.stage;G.revOn=true;G.revLeft=REV_USES;}else G.revS=0;}SFX.buy();hud();revHud();save();drawShop();},n?'mine':'');}
   {const can=G.coins>=EGG_COST;row(EGG,'Lucky Egg','Crack it open for a surprise: coins, Armor or even gems!',can?EGG_COST+' coins':'Need '+(EGG_COST-G.coins)+' more',can?'':'no',openEgg);}}
-  if(tab==='gem'){const g=gb(),need=n=>g>=n?GEM+' '+n:'Need '+(n-g)+' '+GEM;
+  if(tab==='gem'){const g=gb(),need=n=>g>=n?GEM+' '+n:gNeed(n);
     {const can=G.coins>=GEM_COST;row(GEM,'One Gem','Trade coins for a shiny gem',can?GEM_COST+' coins':'Need '+(GEM_COST-G.coins)+' more',can?'':'no',()=>{if(G.coins<GEM_COST)return;G.coins-=GEM_COST;G.gems++;SFX.buy();hud();save();drawShop();});}
     row(BAG,'Coin Bag','Trade 1 gem for '+BAG_COINS+' coins',need(1),g>=1?'':'no',()=>{if(gb()<1)return;G.gsp++;G.coins+=BAG_COINS;SFX.buy();hud();save();drawShop();});
     for(const m of MAGIC){const on=!G.bn&&G.W.tw===m[0];row(TWS[m[0]].ic,m[2],m[3],on?'On now':need(m[1]),on?'on':(g>=m[1]?'':'no'),()=>{if(on||gb()<m[1])return;G.gsp+=m[1];G.mg={s:G.stage,tw:m[0]};SFX.buy();prepStage(G.stage,G.cp);showReady();},on?'me':'');}
@@ -1140,7 +1146,7 @@ function drawShop(){$('shopC').textContent=G.coins;$('shopG').textContent=GEM+' 
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
       save();drawShop();},own?(G.eq===t.id?'me':'mine'):'');}
   if(tab==='gear'||tab==='pet'||tab==='gem')for(const g of GEAR){if(tab==='gem'?!g.gem:(tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=g.gem?gb()>=g.gem:G.coins>=g.cost;
-    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(g.gem?(can?GEM+' '+g.gem:'Need '+(g.gem-gb())+' '+GEM):can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
+    row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(g.gem?(can?GEM+' '+g.gem:gNeed(g.gem)):can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
       if(own){gearTog(g);SFX.keyUp();}
       else{if(!can)return;if(g.gem)G.gsp+=g.gem;else G.coins-=g.cost;G.own.push(g.id);gearOn(g);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
       save();drawShop();},own?(on?'me':'mine'):'');}
@@ -1775,6 +1781,8 @@ function sqVUI(){const d=SQS.cur,op=SQS.op,n=$('sqVn'),b=$('sqVb');b.innerHTML='
   if(op){const cp=op.cap;if(gb()>=cp.g)btn('Open another '+GEM+' '+cp.g,()=>sqOpen(cp));btn('My Keyboards',()=>{SQS.tab='mine';sqBack();});}
   else{const L=sqOwned();if(L.length>1){const i=L.indexOf(d);btn('◀',()=>sqView(L[(i+L.length-1)%L.length].id));btn('▶',()=>sqView(L[(i+1)%L.length].id));}}}
 /* Mystery capsule: the keyboard is rolled, added and saved first, then the capsule shakes and pops open. */
+function sqShort(c){SFX.keyUp();const m=c.g-gb();let h=document.querySelector('#sqL .sqhint');if(!h){h=sqEl('div','sqhint');const L=$('sqL');L.insertBefore(h,L.children[1]||null);}
+  h.innerHTML=GEM+' '+c.n+' costs <b>'+c.g+'</b> gems. You have <b>'+gb()+'</b>, so find <b>'+m+' more</b> in Tippy Tap!';h.classList.remove('bump');void h.offsetWidth;h.classList.add('bump');}
 function sqOpen(cap,free){if(free){if(G.sqw)return;G.sqw=1;}else{if(gb()<cap.g)return;G.gsp+=cap.g;}
   let r=Math.random()*100,t=0;for(let i=0;i<7;i++){r-=cap.p[i];if(r<0){t=i+1;break;}}if(!t)t=2;
   const L=SQ.filter(s=>s.t===t),d=L[(Math.random()*L.length)|0],isNew=!G.sq[d.id];G.sq[d.id]=(G.sq[d.id]||0)+1;sqSave();
@@ -1862,9 +1870,10 @@ function sqTab(){const L=$('sqL'),tab=SQS.tab,T=$('sqT');$('sqG').textContent=GE
   if(tab==='mine'){const n=sqOwned().length;L.appendChild(sqEl('div','sqcap',n?'You have '+n+' of '+SQ.length+' keyboards. Tap one to type on it!':'No keyboards yet. Open a mystery capsule in Get!'));
     const g=sqEl('div','sqgrid');for(const d of SQ){const c=G.sq[d.id]||0;g.appendChild(c?sqCell(d.id,c,'',()=>{SFX.keyUp();sqView(d.id);}):sqCell(d.id,0,'no'));}L.appendChild(g);}
   else if(tab==='get'){L.appendChild(sqEl('div','sqcap','Every capsule hides a mystery keyboard. Bigger capsules are luckier! Find gems in Tippy Tap stages.'));
+    {const m=CAPS[0].g-gb();if(m>0)L.appendChild(sqEl('div','sqhint',GEM+' You have <b>'+gb()+'</b>. The Mini Capsule costs <b>'+CAPS[0].g+'</b>, so find <b>'+m+' more</b> in Tippy Tap! Every stage hides one.'));}
     if(!G.sqw)L.appendChild(sqRow('<i class="capi" style="--cc:#9be38f"></i>','Welcome Capsule','A free mystery keyboard to start your collection!','FREE','ok',()=>sqOpen(CAPS[0],true)));
     for(const c of CAPS){const can=gb()>=c.g;let od='';for(let i=0;i<7;i++)if(c.p[i])od+='<em style="background:'+SQT[i+1][1]+'">'+SQT[i+1][0]+' '+c.p[i]+'%</em>';
-      L.appendChild(sqRow('<i class="capi" style="--cc:'+c.cc+'"></i>',c.n,'<span class="odds">'+od+'</span>',can?GEM+' '+c.g:'Need '+(c.g-gb())+' '+GEM,can?'':'no',()=>sqOpen(c)));}}
+      L.appendChild(sqRow('<i class="capi" style="--cc:'+c.cc+'"></i>',c.n,'<span class="odds">'+od+'</span>',can?GEM+' '+c.g:gNeed(c.g),can?'':'no',()=>{if(gb()<c.g)sqShort(c);else sqOpen(c);}));}}
   else{const have=Object.keys(G.sq).length;L.appendChild(sqEl('div','sqcap',have?'Pick a friend, add keyboards, then Accept or Decline.':'Get a keyboard first, then trade it with friends!'));
     for(const o of G.sqo){const f=FRI[o.f];L.appendChild(sqRow('<b>'+f.e+'</b>',f.n+' wants to trade!','Wants your '+o.want.map(i=>SQI[i].n).join(', ')+' · Gives '+o.give.map(i=>SQI[i].n).join(' + '),'View','ok',()=>trOpen(o.f,o)));}
     for(const f of FR)L.appendChild(sqRow('<b>'+f.e+'</b>',f.n,f.d+' \u00B7 '+invN(G.sqf[f.id])+' keyboards','Trade',have?'':'no',()=>{if(have)trOpen(f.id);}));}}
