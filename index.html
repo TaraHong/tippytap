@@ -306,7 +306,7 @@ if(/\.vercel\.app$/.test(location.hostname)){window.va=window.va||function(){(wi
   </div>
   <button class="shr" id="bShare0">&#x1F49B; Share this game</button>
   <div id="tst" style="display:none;margin-top:14px"><p style="font-size:13px;font-weight:900;margin:0 0 4px;opacity:.9">TEST MODE (only in the preview, never on the real game)</p>
-    <div class="row"><button class="sqb" id="bTsSq">All keyboards</button><button class="sqb" id="bTsPet">All pets</button><button class="sqb" id="bTsGem">+50 gems</button><button class="sqb" id="bTsCoin">+10000 coins</button></div></div>
+    <div class="row"><button class="sqb" id="bTsSq">All keyboards</button><button class="sqb" id="bTsPet">All pets</button><button class="sqb" id="bTsGem">+50 gems</button><button class="sqb" id="bTsCoin">+10000 coins</button><button class="sqb" id="bTsTg">Thanksgiving on/off</button></div></div>
 </div>
 <div id="sq" class="ov">
   <div class="sqh"><button class="sqb" id="bSqX">&#x25C0; Home</button><h2>Keyboard World</h2><div class="sqgem" id="sqG"></div></div>
@@ -577,6 +577,8 @@ const STEP={
  leaf(t,s){const n=6+(Math.random()*4|0);for(let i=0;i<n;i++)N({t:i*.014+rand(0,.01),type:'highpass',f:rand(2500,6500),d:rand(.008,.03),g:rand(.1,.32)*s});
   N({f:900,q:.7,d:.08,g:.14*s});},
  jelly(t,s){const f=rand(150,210);Tn({f:f*1.6,f2:f*.7,d:.22,g:.42*s});Tn({t:.06,f:f*.9,f2:f*1.3,d:.14,g:.2*s});N({f:500,f2:1100,q:3,d:.12,g:.2*s});},
+ feast(t,s){const n=3+(Math.random()*3|0);N({type:'lowpass',f:rand(420,560),d:.06,g:.5*s});   // a flaky pie crust: a soft thud and a few dry crumbs
+  for(let i=0;i<n;i++)N({t:i*.016+rand(0,.012),f:rand(1500,3600),q:2.2,d:rand(.012,.035),g:rand(.14,.3)*s});},
  crystal(t,s){const f=PENT[5+MEL[t.note%16]];Tn({f,d:1.1,g:.2*s,rev:.6});Tn({f:f*2.76,d:.5,g:.06*s,rev:.5});Tn({f:f*5.4,d:.2,g:.025*s});N({type:'highpass',f:6000,d:.01,g:.1*s});}
 };
 const SFX={
@@ -609,6 +611,7 @@ const AMBT={
  puddle(){Tn({f:900,f2:1800,d:.06,g:.06,rev:.8});},
  leaf(){for(let i=0;i<10;i++)N({t:i*.05+rand(0,.04),type:'highpass',f:rand(3000,6000),d:.03,g:.03});},
  jelly(){Tn({f:220,f2:440,d:.15,g:.05,rev:.5});},
+ feast(){for(let i=0;i<8;i++)N({t:i*.06+rand(0,.04),type:'highpass',f:rand(2800,5200),d:.03,g:.028});},
  crystal(){Tn({f:PENT[8+(Math.random()*6|0)],d:2,g:.04,rev:.9});}
 };
 function setAmbient(th){if(!A.ctx)return;const c=A.ctx,t=c.currentTime;
@@ -637,12 +640,18 @@ const THEMES=[
  {id:'crystal',name:'Crystal Cave',sky:['#04041a','#1a1047','#43207a'],pal:[[.26,.3,.52],[.32,.26,.52],[.22,.34,.5]],gc:[.8,.9,1],decor:[[.4,.9,1],[.8,.5,1],[1,.6,.9]],ds:0,wx:'spark',
   amb:{type:'lowpass',f:200,q:.8,g:.06,lfo:.05},k:420,c:30,depth:.07,pe:.7,press:t=>hsv(.5+(t.note%6)*.07,.55,1)}
 ];
+/* Thanksgiving: for two days (the 4th Thursday of November and the day after, by the device's clock) every stage wears this theme.
+   It is not in THEMES, so the usual order of themes never shifts, and build() still shapes the course from the stage's own theme: only looks and sounds change. */
+const TG={id:'feast',name:'Harvest Feast',sky:['#7a2f3a','#f08a3c','#ffe0a0'],pal:[[.98,.93,.82],[.93,.5,.2],[.74,.2,.2]],gc:[.42,.24,.12],decor:[[.95,.5,.12],[.98,.72,.2],[.8,.3,.12]],ds:1,wx:'leaf',
+  amb:{type:'bandpass',f:620,q:.6,g:.055,lfo:.09},k:420,c:30,depth:.07,pe:.08,press:()=>[1,.8,.4]};
+function tgOn(){if(window.__TT_TG!==undefined)return!!window.__TT_TG;const d=new Date();if(d.getMonth()!==10)return false;
+  const th4=22+(11-new Date(d.getFullYear(),10,1).getDay())%7,n=d.getDate();return n===th4||n===th4+1;}
 const GOLD=[1,.82,.2];
 /* How the hazards look in each theme. a: main colour, b: second colour, sph: the slider is round, top: what sits on the slider, e: extra glow.
    Only the looks change: the hit boxes are the same in every theme. */
 const HZ={keys:{a:[.62,.36,.95],b:[1,.88,.35],top:'glyph'},snow:{a:[.2,.45,.95],b:[1,1,1],top:'cap'},bubble:{a:[1,.35,.65],b:[1,.86,.92],sph:1,top:'cone'},
  wood:{a:[.92,.2,.2],b:[.16,.12,.12],top:'band'},puddle:{a:[.3,.78,.3],b:[1,.9,.3],top:'band'},leaf:{a:[1,.5,.1],b:[.35,.62,.2],sph:1,top:'stem'},
- jelly:{a:[.45,.24,.17],b:[1,.93,.8],top:'cap'},crystal:{a:[1,.3,.9],b:[.5,1,1],top:'cone',e:.35}};
+ jelly:{a:[.45,.24,.17],b:[1,.93,.8],top:'cap'},feast:{a:[.78,.1,.22],b:[.36,.6,.22],sph:1,top:'stem'},crystal:{a:[1,.3,.9],b:[.5,1,1],top:'cone',e:.35}};
 
 /* ====================== Painted backdrops ======================
    Each stage gets a scene painted ONCE onto a plain canvas that sits behind the 3D layer
@@ -710,6 +719,17 @@ const PAINT={
   o.river('rgba(255,225,170,.7)',.4,.7,.3,.6);
   for(let i=0;i<70;i++){c.fillStyle=['rgba(255,190,80,.6)','rgba(240,110,50,.6)','rgba(255,225,120,.6)'][i%3];c.save();c.translate(R()*w,R()*h);c.rotate(R()*6);c.fillRect(0,0,h*.012,h*.006);c.restore()}
   o.haze('255,205,140',.6)},
+ feast(o){const{c,R,w,h,hz,glow,ridge,scatter,ell,rr}=o;o.sky('#8a3340','#f59a48',['#e0a54a','#b56a2a','#6e3a1c']);
+  glow(w*.3,hz*.78,hz*1.9,'255,236,170',.85);ridge(hz+3,hz*.42,1.1,'#a8522c');ridge(hz+3,hz*.26,2.1,'#c98a34');
+  {const bw=hz*.62,bh=hz*.4,x0=w*.7,y0=hz-bh*.9;c.fillStyle='#7c2a22';c.fillRect(x0,y0,bw,bh);c.beginPath();c.moveTo(x0-bw*.08,y0);c.lineTo(x0+bw*.5,y0-bh*.6);c.lineTo(x0+bw*1.08,y0);c.closePath();c.fillStyle='#5a1d1a';c.fill();
+   c.fillStyle='#f6e6c8';c.fillRect(x0+bw*.4,y0+bh*.45,bw*.2,bh*.55);c.fillStyle='#8a8f96';rr(x0+bw*1.12,y0-bh*.35,bw*.26,bh*1.35,bw*.12);c.fill();}
+  scatter(36,(x,y,s,d)=>{c.fillStyle=mixc([.7,.55,.2],[.95,.78,.4],(1-d)*.6);ell(x,y,s*9,s*1.4)});
+  scatter(150,(x,y,s,d)=>{const k=R();if(k<.5){c.fillStyle=mixc([.93,.45,.1],[.98,.72,.4],(1-d)*.5);ell(x,y,s*1.2,s*.9);c.fillStyle='rgba(255,220,150,'+(.12+.12*d)+')';ell(x-s*.3,y-s*.25,s*.5,s*.35);c.fillStyle='#4f6a26';c.fillRect(x-s*.1,y-s*1.15,s*.2,s*.4);}
+    else if(k<.8){c.fillStyle=mixc([.86,.68,.3],[.97,.84,.52],(1-d)*.5);rr(x-s*1.2,y-s*.8,s*2.4,s*1.5,s*.25);c.fill();c.fillStyle='rgba(120,80,30,.35)';c.fillRect(x-s*1.2,y-s*.15,s*2.4,s*.14);}
+    else{c.fillStyle=mixc([.5,.56,.2],[.85,.8,.45],(1-d)*.5);c.fillRect(x-s*.1,y-s*2,s*.2,s*2);c.fillStyle=mixc([.95,.8,.25],[.98,.88,.5],(1-d)*.5);ell(x+s*.18,y-s*1.3,s*.2,s*.5);}},1.5);
+  o.river('rgba(255,228,170,.7)',.55,.3,.65,.45);
+  for(let i=0;i<60;i++){c.fillStyle=['rgba(255,190,80,.6)','rgba(200,60,40,.55)','rgba(255,225,120,.6)'][i%3];c.save();c.translate(R()*w,R()*h);c.rotate(R()*6);c.fillRect(0,0,h*.012,h*.006);c.restore()}
+  o.haze('255,205,140',.6)},
  jelly(o){const{c,R,w,h,hz,glow,scatter,ell}=o;o.sky('#ff6aa6','#ffc0a8',['#ffd9e8','#ffb3d1','#ff8fc0']);
   glow(w*.5,hz*.6,hz*1.7,'255,255,220',.6);
   for(let i=0;i<8;i++){const x=R()*w,y=hz*(.15+R()*.45),s=hz*(.16+R()*.2);c.fillStyle=i%2?'rgba(255,255,255,.85)':'rgba(255,214,236,.85)';for(let k=0;k<5;k++)ell(x+(k-2)*s*.6,y-Math.sin(k/4*Math.PI)*s*.35,s*.55,s*.4)}
@@ -759,6 +779,9 @@ function drawDecor(d,th,t){const id=th.id,s=d.s,x=d.x,z=d.z,y=d.y+Math.sin(t*.5+
     else{D(SPH,x,y,z,s*2,s*.5,s*2,DC.cloud);D(CUBE,x,y+s*1.3,z,s*.14,s*2.4,s*.14,DC.lamp);D(SPH,x,y+s*2.6,z,s*.55,s*.55,s*.55,DC.glow,.9);}}
   else if(id==='jelly'){if(d.k){D(SPH,x,y,z,s*2.2,s*.7,s*2.2,DC.candy);D(CUBE,x,y+s*1.2,z,s*.14,s*2,s*.14,DC.white);D(SPH,x,y+s*2.5,z,s*1.4,s*1.4,s*.5,d.col,.15,1,t*.6+d.ph);}
     else D(CUBE,x,y,z,s*1.6,s*(1.5+Math.sin(t*2+d.ph)*.12),s*1.6,d.col,.2,1,d.ph,0,.25);}
+  else if(id==='feast'){D(SPH,x,y,z,s*3,s*.8,s*3,DC.soil);
+    if(d.k){D(SPH,x,y+s*1.1,z,s*2.3,s*1.7,s*2.3,d.col,.08);D(CUBE,x,y+s*2.05,z,s*.3,s*.5,s*.3,[.36,.5,.2]);}
+    else{D(CUBE,x,y+s*.8,z,s*2.2,s*1.1,s*1.5,[.9,.74,.36],.05,1,d.ph,0,.12);D(CUBE,x,y+s*1.75,z,s*1.5,s*.9,s*1.3,[.95,.8,.42],.05,1,d.ph+.5,0,.12);}}
   else if(id==='crystal'){D(CONE,x,y,z,s*.8,s*3.2,s*.8,d.col,.75,1,d.ph,.12);D(CONE,x+s*.6,y-s*.4,z+s*.2,s*.6,s*2.1,s*.6,d.c2,.75,1,d.ph,-.35);D(CONE,x-s*.6,y-s*.5,z-s*.2,s*.55,s*1.8,s*.55,d.col,.75,1,d.ph+2,.4);}
 }
 
@@ -780,7 +803,7 @@ function gb(){return G.gems-G.gsp;}
 /* Price label for something you cannot afford yet: the real price first, then how many more you need, so "Need 1" is never mistaken for the price. */
 function gNeed(p){return GEM+' '+p+'<small>'+(p-gb())+' more to go</small>';}
 function build(stage){
-  const th=THEMES[(stage-1)%THEMES.length],R=rng(stage*7919+13),d=Math.min(1.25,(stage-1)/8);
+  const th0=THEMES[(stage-1)%THEMES.length],th=tgOn()?TG:th0,R=rng(stage*7919+13),d=Math.min(1.25,(stage-1)/8);
   const W={tiles:[],haz:[],coins:[],zones:[],cps:[],decor:[],th,d,finish:null,endZ:0,total:0};
   let cx=0,cy=0,cz=1.5*U,note=0,gi=0;
   const QW='QWERTYUIOPASDFGHJKLZXCVBNM1234567890';
@@ -788,7 +811,7 @@ function build(stage){
     const b=th.pal[(R()*th.pal.length)|0],j=.96+R()*.08;
     const t={x,y,z,hx:w/2,hz:dp/2,th:.5,kind:kind||'tile',off:0,ov:0,fall:0,fv:0,cr:0,crT:0,pressed:false,flash:0,col:[b[0]*j,b[1]*j,b[2]*j],pcol:null,
       glyph:-1,deco:0,note:note++,dx:0,dz:0,mv:null,cp:-1,seed:R()};
-    if(th.id==='wood')t.col=hsv(t.note%8/8,.45,.82);
+    if(th.id==='wood')t.col=hsv(t.note%8/8,.45,.82);else if(th.id==='feast'&&t.kind==='tile'&&t.seed<.22)t.deco=1;
     t.pcol=th.press(t);
     if(t.kind==='tile'){ if(th.id==='keys')t.glyph=GLY[QW[gi++%QW.length]]; if(th.id==='snow'||th.id==='bubble'||th.id==='leaf'||th.id==='puddle')t.deco=1; }
     else if(t.kind==='crumble'){t.col=[.82,.66,.5];t.pcol=[.9,.55,.4];t.glyph=GLY.crack;}
@@ -798,7 +821,7 @@ function build(stage){
     else if(t.kind==='finish'){t.col=[1,.85,.3];t.pcol=[1,.92,.5];t.glyph=GLY.star;}
     W.tiles.push(t);return t;}
   function grid(nx,nz,kind){for(let i=0;i<nz;i++){
-      if(th.id==='keys'&&!kind&&nx>=2&&R()<.16){const t=T(cx,cy,cz-(i+.5)*U,nx*U-GAP,U-GAP);t.glyph=-1;continue;}
+      if(th0.id==='keys'&&!kind&&nx>=2&&R()<.16){const t=T(cx,cy,cz-(i+.5)*U,nx*U-GAP,U-GAP);t.glyph=-1;continue;}
       for(let j=0;j<nx;j++)T(cx+(j-(nx-1)/2)*U,cy,cz-(i+.5)*U,U-GAP,U-GAP,kind);}
     cz-=nz*U;}
   const coin=(x,y,z)=>W.coins.push({x,y,z,got:false,ph:R()*6});
@@ -915,6 +938,7 @@ const GEAR=[
  {id:'kitten',name:'Fluffy Kitten',desc:'+1 extra coin on every new tile',cost:1400,ic:'\uD83D\uDC08',pet:1},
  {id:'puppy',name:'Happy Puppy',desc:'+1 extra coin on every new tile',cost:1400,ic:'\uD83D\uDC36',pet:1},
  {id:'pony',name:'Magic Unicorn',desc:'Sparkles! +2 extra coins on every new tile',cost:3000,ic:'\uD83E\uDD84',pet:2},
+ {id:'turkey',name:'Baby Turkey',desc:'Thanksgiving only! +1 extra coin on every new tile',cost:1400,ic:'\uD83E\uDD83',pet:1,ev:1},
  {id:'dragon',name:'Baby Dragon',desc:'Rare! +3 extra coins on every new tile',gem:15,ic:'\uD83D\uDC32',pet:3},
  {id:'halo',name:'Shiny Halo',desc:'A glowing ring of light floats over your head',gem:6,ic:'\uD83D\uDE07'},
  {id:'cape',name:'Super Cape',desc:'A red hero cape that flaps when you jump',gem:10,ic:'\uD83E\uDDB8'},
@@ -1058,6 +1082,7 @@ function prepStage(n,cpi){if(G.mg&&G.mg.s!==n)G.mg=null;G.stage=n;G.best=Math.ma
   G.state='ready';save();}
 function showReady(){G.state='ready';$('rdS').textContent='STAGE '+G.stage;$('rdT').textContent=G.W.th.name;
   $('rdW').textContent=G.stage>=4?'Watch out! Grumbles the grumpy cloud is chasing you. Keep moving!':(G.stage>=2?'Look for the blue zoom lanes. They make you super fast!':'Step on every key for +1 coin!');
+  if(G.W.th.id==='feast')$('rdW').textContent='Happy Thanksgiving! A special harvest map, for two days only. Baby Turkey is in the Shop!';
   {const tw=G.W.tw,e=$('rdTw');e.style.display=tw?'':'none';if(tw)e.innerHTML='<b>'+TWS[tw].ic+' '+TWS[tw].n+'</b><br>'+TWS[tw].d;
     $('rdG').textContent=G.gift?(G.giftNew?'Welcome gift: '+GEM+' '+G.gift+' gems! Open a capsule in Keyboard World.':'A gift for all the stages you cleared: '+GEM+' '+G.gift+' gems! Tap Buddy to meet new friends.'):GEM+' '+gb()+(G.W.gem&&!G.W.gem.got?' \u00B7 A gem is hiding up high in this stage. Jump to grab it!':' \u00B7 Gem found in this stage!');}
   const box=$('rdTr'),sy=box.scrollTop;box.innerHTML='';
@@ -1145,7 +1170,7 @@ function drawShop(){$('shopC').textContent=G.coins;$('shopG').textContent=GEM+' 
       if(own){G.eq=G.eq===t.id?null:t.id;SFX.keyUp();}
       else{if(!can)return;G.coins-=t.cost;G.own.push(t.id);G.eq=t.id;SFX.buy();hud();}
       save();drawShop();},own?(G.eq===t.id?'me':'mine'):'');}
-  if(tab==='gear'||tab==='pet'||tab==='gem')for(const g of GEAR){if(tab==='gem'?!g.gem:(tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0,on=wear(g.id),can=g.gem?gb()>=g.gem:G.coins>=g.cost;
+  if(tab==='gear'||tab==='pet'||tab==='gem')for(const g of GEAR){if(tab==='gem'?!g.gem:(tab==='pet')!==!!g.pet)continue;const own=G.own.indexOf(g.id)>=0;if(g.ev&&!own&&!tgOn())continue;const on=wear(g.id),can=g.gem?gb()>=g.gem:G.coins>=g.cost;
     row(g.ic,g.name,g.desc+(own&&g.st?' ('+G.gs[g.id]+' stage'+(G.gs[g.id]>1?'s':'')+' left)':''),own?(on?(g.pet?'Send home':'Take off'):(g.pet?'Take along':'Wear')):(g.gem?(can?GEM+' '+g.gem:gNeed(g.gem)):can?g.cost+' coins':'Need '+(g.cost-G.coins)+' more'),own?(on?'on':'eq'):(can?'':'no'),()=>{
       if(own){gearTog(g);SFX.keyUp();}
       else{if(!can)return;if(g.gem)G.gsp+=g.gem;else G.coins-=g.cost;G.own.push(g.id);gearOn(g);if(g.st)G.gs[g.id]=g.st;SFX.buy();hud();}
@@ -1242,6 +1267,7 @@ function pressFx(t){const th=G.W.th.id,y=t.y+.1;
   if(th==='snow')burst(t.x,y,t.z,8,[[1,1,1],[.9,.95,1]],2.2,{sph:true,g:5});
   else if(th==='bubble')burst(t.x,y+.2,t.z,9,[[.85,.97,1],[1,1,1]],3.5,{sph:true,g:4,emis:.3});
   else if(th==='puddle'){spawn(t.x,y,t.z,0,0,0,.6,.5,[.75,.9,1],{ring:true,g:0});burst(t.x,y,t.z,6,[[.7,.88,1]],3,{sph:true});}
+  else if(th==='feast')burst(t.x,y,t.z,7,[[1,.85,.5],[.93,.6,.25],[.75,.2,.2]],2.6,{g:5});
   else if(th==='leaf')burst(t.x,y,t.z,9,[[.9,.45,.15],[.95,.7,.2],[.75,.25,.15]],3.2,{g:4});
   else if(th==='crystal'){spawn(t.x,y,t.z,0,0,0,.7,.6,t.pcol,{ring:true,g:0,emis:1});burst(t.x,y,t.z,5,[t.pcol,[1,1,1]],2.5,{emis:1,g:-1});}
   else if(th==='jelly')burst(t.x,y,t.z,6,[t.pcol],2.6,{sph:true});
@@ -1465,6 +1491,9 @@ function drawPet(t,kind){const q=G.pet,P=G.P,a=Math.atan2(P.x-q.x,q.z-P.z),fx=Ma
   else if(kind==='turtle'){const S=[.2,.6,.32],H=[.62,.85,.42],st=run?Math.sin(t*7)*.05:0;
     p(0,.2,-.02,.52,.3,.56,S,.12);p(0,.11,-.02,.56,.1,.6,[.95,.86,.5],.1);p(0,.25,.31,.2,.2,.22,H,.12);
     p(-.25,.07,.14+st,.14,.1,.16,H);p(.25,.07,.14-st,.14,.1,.16,H);eyes(.06,.3,.4,.05);}
+  else if(kind==='turkey'){const B=[.58,.38,.22],wb=Math.sin(t*6)*.03;
+    p(-.16,.42,-.24,.16,.38,.06,[.93,.42,.12],.2);p(0,.47,-.26,.16,.42,.06,[.98,.75,.22],.2);p(.16,.42,-.24,.16,.38,.06,[.78,.2,.16],.2);
+    p(0,.22,-.02,.42,.38,.46,B,.12);p(0,.5,.16,.24,.26,.24,B,.12);c(0,.48,.31,.08,.1,.08,[1,.7,.2],.2);p(wb,.41,.3,.06,.12,.05,[.9,.15,.18],.2);eyes(.07,.55,.26,.05);}
   else if(kind==='dragon'){const B=[.36,.8,.46],Wg=[1,.6,.25],fl=Math.sin(t*10)*.08;
     p(0,.24,-.04,.4,.38,.5,B,.2);p(0,.52,.17,.32,.3,.34,B,.2);p(0,.44,.33,.2,.14,.16,[.78,.95,.6],.15);c(0,.76,.14,.1,.2,.1,Wg,.4);
     p(-.27,.44+fl,-.1,.24,.28,.06,Wg,.4);p(.27,.44+fl,-.1,.24,.28,.06,Wg,.4);eyes(.09,.58,.3,.06);}
@@ -1498,6 +1527,7 @@ function render(){
     D(CUBE,x,top-k.th/2,z,k.hx*2,k.th,k.hz*2,col,em,1,0,0,th.id==='keys'?.17:.1,k.glyph);
     if(k.deco&&k.kind==='tile'){
       if(th.id==='snow'){const h=k.deco===1?.14:.04;D(CUBE,x,top+h/2,z,k.hx*1.9,h,k.hz*1.9,k.deco===1?[1,1,1]:[.8,.88,.97],.08,1,0,0,.05);}
+      else if(th.id==='feast'){D(SPH,x,top+.07,z,.62,.2,.62,[.9,.62,.3],.08);D(SPH,x,top+.13,z,.46,.14,.46,[.93,.42,.12],.12);D(SPH,x,top+.21,z,.16,.1,.16,[1,.98,.92],.15);}
       else if(th.id==='leaf'&&k.deco===1){for(let j=0;j<3;j++){const a=k.seed*40+j*2.1;D(CUBE,x+Math.cos(a)*k.hx*.5,top+.03+j*.012,z+Math.sin(a*1.3)*k.hz*.5,.5,.03,.32,th.decor[j],.05,1,a,0,0);}}
     }
     if(k.kind==='tread')drawTread(k,top,t);else if(k.kind==='portal')drawPortal(k,top,t);
@@ -1908,6 +1938,7 @@ if(!/(^|\.)github\.io$|(^|\.)vercel\.app$/.test(location.hostname)){$('tst').sty
   const need=fn=>()=>{if(!me()){showName(()=>{fn();goHome();},'home');return;}fn();goHome();};
   $('bTsSq').addEventListener('click',need(()=>{sqInit();for(const d of SQ)G.sq[d.id]=Math.max(2,G.sq[d.id]||0);sqSave();toast('All keyboards unlocked!');}));
   $('bTsPet').addEventListener('click',need(()=>{const p=me();for(const g of GEAR)if(g.pet&&G.own.indexOf(g.id)<0)G.own.push(g.id);p.own=G.own;plSave();toast('All pets are here!');}));
+  $('bTsTg').addEventListener('click',()=>{window.__TT_TG=!tgOn();toast('Thanksgiving '+(tgOn()?'ON':'OFF')+'. Start a stage to see it.');});
   $('bTsGem').addEventListener('click',need(()=>{const p=me();G.gems+=50;p.gem=G.gems;plSave();toast('+50 gems');}));
   $('bTsCoin').addEventListener('click',need(()=>{const p=me();G.coins=(p.coins||0)+10000;p.coins=G.coins;plSave();hud();toast('+10000 coins');}));}
 window.__sq={SQ,SQS,KB,KEYS,CAPS,snd:kbSnd,hit:kbHit,get T(){return TDE;}};
