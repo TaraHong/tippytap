@@ -18,6 +18,7 @@ After changing any file, bump `VERSION` in `sw.js` so installed copies pick up t
 자세한 규칙과 숫자는 [`CLAUDE.md`](CLAUDE.md)에 있습니다.
 
 ### 2026-11-26
+- itch.io에 올릴 수 있게 준비했습니다(itch.io에서는 테스트용 버튼과 오프라인 저장을 끕니다).
 - Keyboard World: Uncommon부터 등급이 오를수록 키보드가 화려해집니다. 테두리와 포인트 색 키캡(Uncommon), 바닥 빛과 차례로 켜지는 전구(Rare), 색이 번지는 키캡과 모서리 진주(Super Rare), 무지개 전구(Epic), 금 테두리·보석·티아라(Legendary), 무지개로 흐르는 장식(Mythic).
 - Keyboard World: 투명 큐브 안에 보석이 든 키캡(Crystal Ice, Pudding Party 등)을 누르면 안의 보석이 빙글 돌다가 서서히 멈춥니다.
 

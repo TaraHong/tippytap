@@ -1951,7 +1951,7 @@ $('bSqX').addEventListener('click',()=>{if(TDE){clearTimeout(TDE.tm);TDE=null;}g
 {const v=$('sqV');v.addEventListener('pointerdown',sqDown);v.addEventListener('pointermove',sqMove);v.addEventListener('pointerup',sqUp);v.addEventListener('pointercancel',sqUp);}
 /* Test mode: free squishes, gems and coins for trying things out. It only shows where the game is not on its real addresses (the artifact preview, a local file),
    so nothing here can be reached on the deployed game. The preview has its own storage, so this never touches a real save. */
-if(!/(^|\.)github\.io$|(^|\.)vercel\.app$/.test(location.hostname)){$('tst').style.display='';
+if(!window.TT_DIST&&!/(^|\.)github\.io$|(^|\.)vercel\.app$|(^|\.)itch\.(io|zone)$/.test(location.hostname)){$('tst').style.display='';
   const need=fn=>()=>{if(!me()){showName(()=>{fn();goHome();},'home');return;}fn();goHome();};
   $('bTsSq').addEventListener('click',need(()=>{sqInit();for(const d of SQ)G.sq[d.id]=Math.max(2,G.sq[d.id]||0);sqSave();toast('All keyboards unlocked!');}));
   $('bTsPet').addEventListener('click',need(()=>{const p=me();for(const g of GEAR)if(g.pet&&G.own.indexOf(g.id)<0)G.own.push(g.id);p.own=G.own;plSave();toast('All pets are here!');}));
@@ -2098,7 +2098,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost') && !window.TT_DIST && !/(^|\.)itch\.(io|zone)$/.test(location.hostname)){
   window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}});
 }
 </script>
